@@ -1,0 +1,19 @@
+{
+  "name": "yalla",
+  "version": "1.0.0",
+  "description": "Autonomous coding pipeline for Claude Code: track -> plan -> work -> test -> review -> compound -> ship. Multi-agent planning, build, and adversarial review with binary pass/fail gates.",
+  "author": {
+    "name": "Iwo Szapar"
+  },
+  "homepage": "https://github.com/iwo-szapar/yalla",
+  "repository": "https://github.com/iwo-szapar/yalla",
+  "license": "MIT",
+  "keywords": [
+    "autonomous",
+    "pipeline",
+    "code-review",
+    "multi-agent",
+    "agents",
+    "tdd"
+  ]
+}

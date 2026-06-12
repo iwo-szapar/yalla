@@ -1,0 +1,28 @@
+{
+  "name": "yalla",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Yalla autonomous-coding eval harness + autopilot for Claude Code (standalone, open-source).",
+  "scripts": {
+    "eval:yalla:proof-contract": "tsx eval/yalla/runner/proof-contract-runner.ts",
+    "eval:yalla:test-inventory": "tsx eval/yalla/runner/test-inventory-runner.ts",
+    "eval:yalla:plan-quality": "tsx eval/yalla/runner/plan-review-coverage-runner.ts plan-quality",
+    "eval:yalla:review-quality": "tsx eval/yalla/runner/plan-review-coverage-runner.ts review-quality",
+    "eval:yalla:test-coverage": "tsx eval/yalla/runner/plan-review-coverage-runner.ts test-coverage",
+    "eval:yalla:plan-review-coverage": "tsx eval/yalla/runner/plan-review-coverage-runner.ts",
+    "eval:yalla:outcome-quality": "tsx eval/yalla/runner/outcome-quality.ts",
+    "eval:yalla:smoke": "tsx eval/yalla/runner/smoke-runner.ts",
+    "yalla:autopilot": "tsx scripts/yalla-autopilot.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "echo \"No e2e suite in the standalone example dataset; UI-journey tests are placeholder fixtures.\" && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "zod": "^3.24.1"
+  }
+}

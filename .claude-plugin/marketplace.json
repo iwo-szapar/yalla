@@ -1,0 +1,13 @@
+{
+  "name": "yalla",
+  "owner": {
+    "name": "Iwo Szapar"
+  },
+  "plugins": [
+    {
+      "name": "yalla",
+      "source": "./",
+      "description": "Autonomous coding pipeline: track -> plan -> work -> test -> review -> compound -> ship."
+    }
+  ]
+}

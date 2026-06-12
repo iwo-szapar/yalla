@@ -1,0 +1,526 @@
+[
+  {
+    "id": "zod_interface_drift_review_gap",
+    "priority": "P0",
+    "held_out": false,
+    "source": "docs/incidents/2026-04-16-yalla-review-gap.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Update generated file schema handling.",
+        "user_visible_promise": "Generated repos keep working after schema changes."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Schema and interface contracts stay aligned.",
+          "negative_path": false,
+          "proof_mode": "model-judge",
+          "deterministic_seam_available": true,
+          "status": "covered"
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["lib/repo-generator/schema.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": []
+      },
+      "review_evidence": {
+        "required_checks": ["correctness-check", "schema-migration-check", "evidence-check"],
+        "checks": [
+          { "name": "correctness-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": [
+          {
+            "description": "Removed dead displayName field after review.",
+            "rerun_commands": []
+          }
+        ]
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "Schema update is complete.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    },
+    "patched": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Update generated file schema handling.",
+        "user_visible_promise": "Generated repos keep working after schema changes."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Schema and interface contracts stay aligned.",
+          "negative_path": false,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/lib/repo-generator/schema-contract.test.ts",
+          "evidence": "npm run test -- tests/lib/repo-generator/schema-contract.test.ts"
+        },
+        {
+          "id": "ac-2",
+          "description": "A stale interface field cannot be treated as successful output.",
+          "negative_path": true,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/lib/repo-generator/schema-contract.test.ts",
+          "evidence": "Regression assertion fails on stale interface field."
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["lib/repo-generator/schema.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "npm run test -- tests/lib/repo-generator/schema-contract.test.ts", "status": "pass", "summary": "Schema/interface contract tests passed." },
+          { "command": "npm run typecheck", "status": "pass", "summary": "Types stayed aligned." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["correctness-check", "schema-migration-check", "slop-check", "evidence-check", "reviewability-check"],
+        "checks": [
+          { "name": "correctness-check", "verdict": "pass", "findings": [] },
+          { "name": "schema-migration-check", "verdict": "pass", "findings": [] },
+          { "name": "slop-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] },
+          { "name": "reviewability-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": [
+          {
+            "description": "Removed dead displayName field after review.",
+            "rerun_commands": [
+              { "command": "npm run test -- tests/lib/repo-generator/schema-contract.test.ts", "status": "pass", "summary": "Regression still passes after review edit." }
+            ]
+          }
+        ]
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "PR names schema contract entry points, test evidence, and review-triggered rerun.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    }
+  },
+  {
+    "id": "checkout_surface_parity_missing",
+    "priority": "P0",
+    "held_out": false,
+    "source": "docs/learnings/2026-05-06-checkout-surface-parity.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Add promo code handling to checkout.",
+        "user_visible_promise": "Customers can enter promo codes wherever they buy."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Checkout accepts a valid promo code.",
+          "negative_path": false,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/api/checkout/create-session.test.ts"
+        },
+        {
+          "id": "ac-2",
+          "description": "Invalid promo codes do not silently discount purchases.",
+          "negative_path": true,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/api/checkout/create-session.test.ts"
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["src/pages/CheckoutPage.tsx"],
+        "equivalent_surfaces_checked": ["src/pages/CheckoutPage.tsx"],
+        "commands": [
+          { "command": "npm run test -- tests/api/checkout/create-session.test.ts", "status": "pass", "summary": "Checkout API tests passed." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["correctness-check", "payment-integrity-check", "evidence-check"],
+        "checks": [
+          { "name": "correctness-check", "verdict": "pass", "findings": [] },
+          { "name": "payment-integrity-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "Promo code checkout support is complete.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    },
+    "patched": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Add promo code handling to checkout.",
+        "user_visible_promise": "Customers can enter promo codes wherever they buy."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Checkout accepts a valid promo code on both purchase surfaces.",
+          "negative_path": false,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/api/checkout/create-session.test.ts"
+        },
+        {
+          "id": "ac-2",
+          "description": "Invalid promo codes do not silently discount purchases on either surface.",
+          "negative_path": true,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/api/checkout/create-session.test.ts"
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["src/pages/CheckoutPage.tsx", "src/pages/PublicProduct.tsx"],
+        "equivalent_surfaces_checked": ["src/pages/CheckoutPage.tsx", "src/pages/PublicProduct.tsx"],
+        "commands": [
+          { "command": "npm run test -- tests/api/checkout/create-session.test.ts", "status": "pass", "summary": "Checkout API tests passed." },
+          { "command": "npm run test -- tests/integration/checkout-surfaces.test.ts", "status": "pass", "summary": "Checkout and public product surfaces both render promo input." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["correctness-check", "payment-integrity-check", "ui-journey-check", "evidence-check", "reviewability-check"],
+        "checks": [
+          { "name": "correctness-check", "verdict": "pass", "findings": [] },
+          { "name": "payment-integrity-check", "verdict": "pass", "findings": [] },
+          { "name": "ui-journey-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] },
+          { "name": "reviewability-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "PR calls out both checkout surfaces and the parity test evidence.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    }
+  },
+  {
+    "id": "deterministic_seam_model_judge_only",
+    "priority": "P0",
+    "held_out": false,
+    "source": "docs/prds/active/yalla-sbf-autopilot-evals/01-proof-contract-evals.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Validate API error response behavior.",
+        "user_visible_promise": "Customers get a safe error instead of leaked internals."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "500 responses do not leak error.message.",
+          "negative_path": true,
+          "proof_mode": "model-judge",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "evidence": "Reviewer says the code looks safe."
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["api/example.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "manual review", "status": "pass", "summary": "Reviewed code by eye." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["security-check", "evidence-check"],
+        "checks": [
+          { "name": "security-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "Error behavior is safe.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    },
+    "patched": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Validate API error response behavior.",
+        "user_visible_promise": "Customers get a safe error instead of leaked internals."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "500 responses do not leak error.message.",
+          "negative_path": true,
+          "proof_mode": "new-test",
+          "deterministic_seam_available": true,
+          "status": "covered",
+          "proof_ref": "tests/api/example-error.test.ts",
+          "evidence": "Test asserts response body is { error: 'Internal server error' }."
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["api/example.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "npm run test -- tests/api/example-error.test.ts", "status": "pass", "summary": "API error response test passed." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["security-check", "correctness-check", "evidence-check", "reviewability-check"],
+        "checks": [
+          { "name": "security-check", "verdict": "pass", "findings": [] },
+          { "name": "correctness-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] },
+          { "name": "reviewability-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "PR points reviewers to the deterministic API seam and exact error assertion.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    }
+  },
+  {
+    "id": "missing_evidence_false_success",
+    "priority": "P0",
+    "held_out": false,
+    "source": "docs/prds/active/yalla-sbf-autopilot-evals/01-proof-contract-evals.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Ship a customer-visible dashboard fix.",
+        "user_visible_promise": "The dashboard no longer crashes for customers."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Dashboard renders for an account with no products.",
+          "negative_path": true,
+          "proof_mode": "inconclusive",
+          "deterministic_seam_available": true,
+          "status": "covered"
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["src/pages/Dashboard.tsx"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "npm run test -- tests/integration/dashboard.test.ts", "status": "blocked", "summary": "Missing local browser dependency." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["ui-journey-check", "evidence-check"],
+        "checks": [
+          { "name": "ui-journey-check", "verdict": "blocked", "findings": ["Browser dependency missing."] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "pr_reviewability": {
+          "summary": "Dashboard fix is done.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    },
+    "patched": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Ship a customer-visible dashboard fix.",
+        "user_visible_promise": "The dashboard no longer crashes for customers."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Dashboard renders for an account with no products.",
+          "negative_path": true,
+          "proof_mode": "inconclusive",
+          "deterministic_seam_available": true,
+          "status": "blocked",
+          "evidence": "Playwright unavailable locally; PR opened as human-review-needed."
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["src/pages/Dashboard.tsx"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "npm run test -- tests/integration/dashboard.test.ts", "status": "blocked", "summary": "Missing local browser dependency." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["ui-journey-check", "evidence-check", "reviewability-check"],
+        "checks": [
+          { "name": "ui-journey-check", "verdict": "blocked", "findings": ["Browser dependency missing."] },
+          { "name": "evidence-check", "verdict": "blocked", "findings": ["User-visible journey unproven."] },
+          { "name": "reviewability-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "INCONCLUSIVE",
+        "remaining_delta": ["Run browser smoke or CI Playwright before calling the dashboard journey proven."],
+        "pr_reviewability": {
+          "summary": "PR is explicitly marked human-review-needed because user-visible proof is blocked.",
+          "risks": ["Dashboard journey remains unproven until browser evidence exists."],
+          "human_decisions_needed": ["Reviewer must run or accept the blocked dashboard smoke test before merge."]
+        }
+      }
+    }
+  },
+  {
+    "id": "heldout_inconclusive_never_success",
+    "priority": "P1",
+    "held_out": true,
+    "source": "docs/prds/active/yalla-sbf-autopilot-evals/00-master-prd.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Verify external delivery email.",
+        "user_visible_promise": "Customers receive the only delivery link."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Delivery email contains a valid tokenized link.",
+          "negative_path": false,
+          "proof_mode": "manual-smoke",
+          "deterministic_seam_available": false,
+          "status": "covered"
+        },
+        {
+          "id": "ac-2",
+          "description": "If the email provider is unavailable, the run does not claim delivery success.",
+          "negative_path": true,
+          "proof_mode": "inconclusive",
+          "deterministic_seam_available": false,
+          "status": "covered"
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["lib/email/delivery.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": []
+      },
+      "review_evidence": {
+        "required_checks": ["email-delivery-check", "evidence-check"],
+        "checks": [
+          { "name": "email-delivery-check", "verdict": "pass", "findings": [] },
+          { "name": "evidence-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": ["Email provider was unavailable during smoke."],
+        "pr_reviewability": {
+          "summary": "Email delivery is complete.",
+          "risks": [],
+          "human_decisions_needed": []
+        }
+      }
+    },
+    "patched": {
+      "issue_id": "issue-1166",
+      "issue_intent": {
+        "summary": "Verify external delivery email.",
+        "user_visible_promise": "Customers receive the only delivery link."
+      },
+      "acceptance_criteria": [
+        {
+          "id": "ac-1",
+          "description": "Delivery email contains a valid tokenized link.",
+          "negative_path": false,
+          "proof_mode": "manual-smoke",
+          "deterministic_seam_available": false,
+          "status": "blocked",
+          "evidence": "Provider unavailable during smoke."
+        },
+        {
+          "id": "ac-2",
+          "description": "If the email provider is unavailable, the run does not claim delivery success.",
+          "negative_path": true,
+          "proof_mode": "inconclusive",
+          "deterministic_seam_available": false,
+          "status": "blocked",
+          "evidence": "Provider unavailable; run must not call delivery proven."
+        }
+      ],
+      "implementation_evidence": {
+        "changed_surfaces": ["lib/email/delivery.ts"],
+        "equivalent_surfaces_checked": [],
+        "commands": [
+          { "command": "npm run test -- tests/lib/email/delivery-render.test.ts", "status": "pass", "summary": "Render test passed; external send smoke blocked." }
+        ]
+      },
+      "review_evidence": {
+        "required_checks": ["email-delivery-check", "evidence-check", "reviewability-check"],
+        "checks": [
+          { "name": "email-delivery-check", "verdict": "blocked", "findings": ["External provider unavailable."] },
+          { "name": "evidence-check", "verdict": "blocked", "findings": ["No external delivery receipt."] },
+          { "name": "reviewability-check", "verdict": "pass", "findings": [] }
+        ],
+        "review_triggered_edits": []
+      },
+      "outcome": {
+        "verdict": "INCONCLUSIVE",
+        "remaining_delta": ["Capture provider send receipt or CI smoke evidence."],
+        "pr_reviewability": {
+          "summary": "PR is reviewable but explicitly not proven because external send evidence is missing.",
+          "risks": ["Customer delivery link email remains externally unverified."],
+          "human_decisions_needed": ["Reviewer must run external email smoke or accept the risk before merge."]
+        }
+      }
+    }
+  }
+]

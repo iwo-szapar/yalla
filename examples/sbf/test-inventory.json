@@ -1,0 +1,106 @@
+{
+  "inventory_version": 1,
+  "generated_from": "origin/staging@334449500e7d0ef7ebde5a72a3cea86f25986261",
+  "categories": [
+    {
+      "category": "payment",
+      "description": "Stripe checkout, Connect fee, promo, webhook, and entitlement payment paths.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test -- tests/api/checkout tests/api/webhooks tests/lib/stripe"],
+      "existing_tests": [
+        "tests/api/checkout/create-session-validation.test.ts",
+        "tests/api/checkout/create-session-packages.test.ts",
+        "tests/api/webhooks/stripe-promo-redemption.test.ts",
+        "tests/api/webhooks/stripe-reliability.test.ts",
+        "tests/lib/stripe/stripe-client-promo-fee.test.ts"
+      ],
+      "coverage_gaps": []
+    },
+    {
+      "category": "auth-security",
+      "description": "Signup, invite binding, API scoping, tenant isolation, and secret scanning seams.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test -- tests/api/auth tests/security tests/scripts/check-secrets.test.ts"],
+      "existing_tests": [
+        "tests/api/auth/signup-email-binding.test.ts",
+        "tests/api/auth/validate-invite.test.ts",
+        "tests/security/creator-api-scoping.test.ts",
+        "tests/security/tenant-isolation.test.ts",
+        "tests/scripts/check-secrets.test.ts"
+      ],
+      "coverage_gaps": []
+    },
+    {
+      "category": "async-jobs",
+      "description": "QStash jobs, cron recovery, webhook reliability, and stale session reaping.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test -- tests/api/jobs tests/api/cron tests/lib/jobs tests/api/webhooks/stripe-reliability.test.ts"],
+      "existing_tests": [
+        "tests/api/jobs/ingest-source-repo-changes.test.ts",
+        "tests/api/cron/repo-delivery-drift.test.ts",
+        "tests/api/cron/reap-stale-sessions.test.ts",
+        "tests/api/cron/pipeline-alerts.test.ts",
+        "tests/lib/jobs/qstash-client.test.ts"
+      ],
+      "coverage_gaps": []
+    },
+    {
+      "category": "generated-artifacts",
+      "description": "Generated repo content, clone-mode personalization, manifests, tokens, citations, and cowork installer artifacts.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test -- tests/lib/repo-generator"],
+      "existing_tests": [
+        "tests/lib/repo-generator/strip-citations.test.ts",
+        "tests/lib/repo-generator/no-plaintext-token.test.ts",
+        "tests/lib/repo-generator/creator-preview-integrity.test.ts",
+        "tests/lib/repo-generator/cowork-installer-pipeline.test.ts",
+        "tests/lib/repo-generator/clone-mode.test.ts"
+      ],
+      "coverage_gaps": []
+    },
+    {
+      "category": "ui-journeys",
+      "description": "Browser-facing checkout, apply, public product, mobile, admin, and dashboard paths.",
+      "deterministic_seam_available": true,
+      "proof_mode": "playwright",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test:e2e"],
+      "existing_tests": [
+        "tests/playwright/checkout.spec.ts",
+        "tests/playwright/public-product.spec.ts",
+        "tests/playwright/apply-form-validation.spec.ts",
+        "tests/playwright/mobile.spec.ts",
+        "tests/playwright/compound-product-save.spec.ts"
+      ],
+      "coverage_gaps": []
+    },
+    {
+      "category": "schema-migration",
+      "description": "Platform migrations, tenant template schema, migration writers, and schema/runtime coupling.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm run test -- tests/lib/db tests/unit/migrations"],
+      "existing_tests": [
+        "tests/lib/db/migration-file-validation.test.ts",
+        "tests/lib/db/platform-templates.test.ts",
+        "tests/unit/migrations/migration-column-writers.test.ts"
+      ],
+      "coverage_gaps": []
+    }
+  ]
+}

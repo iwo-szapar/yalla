@@ -1,0 +1,118 @@
+[
+  {
+    "id": "valid_inventory_hides_sealed_rubric",
+    "expected_valid": true,
+    "sealed_rubric": {
+      "judge_notes": "This rubric must stay unavailable to evaluated input.",
+      "answer_key": "Valid fixture should pass."
+    },
+    "input": {
+      "inventory_version": 1,
+      "generated_from": "fixture",
+      "categories": [
+        {
+          "category": "payment",
+          "description": "Payment tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "existing-test",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test -- tests/api/checkout"],
+          "existing_tests": ["tests/api/checkout/create-session-validation.test.ts"],
+          "coverage_gaps": []
+        },
+        {
+          "category": "auth-security",
+          "description": "Auth tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "existing-test",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test -- tests/api/auth"],
+          "existing_tests": ["tests/api/auth/signup-email-binding.test.ts"],
+          "coverage_gaps": []
+        },
+        {
+          "category": "async-jobs",
+          "description": "Async tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "existing-test",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test -- tests/api/cron"],
+          "existing_tests": ["tests/api/cron/reap-stale-sessions.test.ts"],
+          "coverage_gaps": []
+        },
+        {
+          "category": "generated-artifacts",
+          "description": "Generated artifact tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "existing-test",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test -- tests/lib/repo-generator"],
+          "existing_tests": ["tests/lib/repo-generator/no-plaintext-token.test.ts"],
+          "coverage_gaps": []
+        },
+        {
+          "category": "ui-journeys",
+          "description": "UI tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "playwright",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test:e2e"],
+          "existing_tests": ["tests/playwright/checkout.spec.ts"],
+          "coverage_gaps": []
+        },
+        {
+          "category": "schema-migration",
+          "description": "Migration tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "existing-test",
+          "verdict": "PROVEN",
+          "verification_strength": "strong",
+          "commands": ["npm run test -- tests/lib/db"],
+          "existing_tests": ["tests/lib/db/migration-file-validation.test.ts"],
+          "coverage_gaps": []
+        }
+      ]
+    }
+  },
+  {
+    "id": "likely_secret_rejected",
+    "expected_valid": false,
+    "sealed_rubric": {
+      "judge_notes": "Secret fixtures must fail."
+    },
+    "input": {
+      "inventory_version": 1,
+      "generated_from": "fixture SBF_FAKE_SECRET_TEST_VALUE",
+      "categories": []
+    }
+  },
+  {
+    "id": "weak_commands_not_proven",
+    "expected_valid": false,
+    "sealed_rubric": {
+      "judge_notes": "Weak verification cannot be PROVEN."
+    },
+    "input": {
+      "inventory_version": 1,
+      "generated_from": "fixture",
+      "categories": [
+        {
+          "category": "payment",
+          "description": "Payment tests.",
+          "deterministic_seam_available": true,
+          "proof_mode": "model-judge",
+          "verdict": "PROVEN",
+          "verification_strength": "weak",
+          "commands": ["manual review"],
+          "existing_tests": ["tests/api/checkout/create-session-validation.test.ts"],
+          "coverage_gaps": []
+        }
+      ]
+    }
+  }
+]

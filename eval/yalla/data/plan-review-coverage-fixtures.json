@@ -1,0 +1,88 @@
+[
+  {
+    "id": "plan_relevant_subsystem_scan",
+    "kind": "plan-quality",
+    "priority": "P0",
+    "source": "docs/prds/active/yalla-sbf-autopilot-evals/03-plan-review-test-coverage-evals.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "kind": "plan-quality",
+      "subsystem": "checkout",
+      "scan_scope": "all-history",
+      "required_relevant_sources": ["docs/learnings/2026-05-06-checkout-surface-parity.md"],
+      "relevant_sources_checked": ["docs/learnings/2026-05-06-checkout-surface-parity.md"]
+    },
+    "patched": {
+      "kind": "plan-quality",
+      "subsystem": "checkout",
+      "scan_scope": "relevant-subsystem",
+      "required_relevant_sources": ["docs/learnings/2026-05-06-checkout-surface-parity.md"],
+      "relevant_sources_checked": ["docs/learnings/2026-05-06-checkout-surface-parity.md"]
+    }
+  },
+  {
+    "id": "review_zod_interface_drift",
+    "kind": "review-quality",
+    "priority": "P0",
+    "source": "docs/incidents/2026-04-16-yalla-review-gap.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "kind": "review-quality",
+      "interface_drift_cases": [
+        {
+          "name": "zod schema accepts field absent from downstream interface",
+          "schema_path": "lib/validation/product.ts",
+          "consumer_path": "api/products.ts"
+        }
+      ],
+      "findings": [
+        {
+          "category": "correctness",
+          "severity": "medium",
+          "references": ["api/products.ts"],
+          "summary": "Product update path should be checked."
+        }
+      ]
+    },
+    "patched": {
+      "kind": "review-quality",
+      "interface_drift_cases": [
+        {
+          "name": "zod schema accepts field absent from downstream interface",
+          "schema_path": "lib/validation/product.ts",
+          "consumer_path": "api/products.ts"
+        }
+      ],
+      "findings": [
+        {
+          "category": "zod-interface-drift",
+          "severity": "high",
+          "references": ["lib/validation/product.ts", "api/products.ts"],
+          "summary": "Schema and API writer fields must match."
+        }
+      ]
+    }
+  },
+  {
+    "id": "test_coverage_deterministic_seam_model_judge",
+    "kind": "test-coverage",
+    "priority": "P0",
+    "source": "docs/prds/active/yalla-sbf-autopilot-evals/03-plan-review-test-coverage-evals.md",
+    "legacy_should_fail": true,
+    "patched_should_pass": true,
+    "legacy": {
+      "kind": "test-coverage",
+      "deterministic_seam_available": true,
+      "proposed_proof_modes": ["model-judge"],
+      "coverage_refs": []
+    },
+    "patched": {
+      "kind": "test-coverage",
+      "deterministic_seam_available": true,
+      "proposed_proof_modes": ["existing-test"],
+      "coverage_refs": ["tests/api/products.compound-pricing.test.ts"]
+    }
+  }
+]

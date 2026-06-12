@@ -1,0 +1,99 @@
+{
+  "inventory_version": 1,
+  "generated_from": "yalla-template@generic-example",
+  "categories": [
+    {
+      "category": "payment",
+      "description": "Payment, billing, and checkout paths (e.g. Stripe sessions, fee/commission math, promo redemption, webhook entitlement).",
+      "deterministic_seam_available": true,
+      "proof_mode": "inconclusive",
+      "verdict": "INCONCLUSIVE",
+      "verification_strength": "missing",
+      "commands": [],
+      "existing_tests": [],
+      "coverage_gaps": [
+        "This template repo ships no payment domain code, so there is nothing to verify here.",
+        "A real project would prove: checkout session validation, Connect application_fee math on discounted prices, promo-code resolution before Stripe, and idempotent webhook entitlement grants."
+      ],
+      "notes": "No payment seam exists in this template. Replace with existing_tests once your project adds billing code; never mark PROVEN without a real passing test."
+    },
+    {
+      "category": "auth-security",
+      "description": "Authentication, authorization, tenant isolation, and secret-scanning seams.",
+      "deterministic_seam_available": true,
+      "proof_mode": "inconclusive",
+      "verdict": "INCONCLUSIVE",
+      "verification_strength": "missing",
+      "commands": [],
+      "existing_tests": [],
+      "coverage_gaps": [
+        "This template repo ships no auth or multi-tenant domain code to verify.",
+        "A real project would prove: signup/invite binding, API scope enforcement, cross-tenant data isolation, and a secret-scanner that fails on committed credentials."
+      ],
+      "notes": "No auth seam exists in this template. Add existing_tests when your project introduces auth; secret scanning should be a deterministic test, not a model judge."
+    },
+    {
+      "category": "async-jobs",
+      "description": "Background jobs, queues, cron recovery, and retry/idempotency seams.",
+      "deterministic_seam_available": true,
+      "proof_mode": "inconclusive",
+      "verdict": "INCONCLUSIVE",
+      "verification_strength": "missing",
+      "commands": [],
+      "existing_tests": [],
+      "coverage_gaps": [
+        "This template repo ships no async job or cron code to verify.",
+        "A real project would prove: queue producer/consumer contracts, cron recovery of stalled work, stale-session reaping, and at-least-once handler idempotency."
+      ],
+      "notes": "No async-jobs seam exists in this template. Map to existing_tests once your project adds a job runner or cron."
+    },
+    {
+      "category": "generated-artifacts",
+      "description": "Yalla pipeline self-tests: proof-contract, test-inventory, outcome-quality, and plan/review coverage evaluators that grade generated artifacts deterministically.",
+      "deterministic_seam_available": true,
+      "proof_mode": "existing-test",
+      "verdict": "PROVEN",
+      "verification_strength": "strong",
+      "commands": ["npm test"],
+      "existing_tests": [
+        "tests/eval/yalla-proof-contract.test.ts",
+        "tests/eval/yalla-test-inventory.test.ts",
+        "tests/eval/yalla-outcome-quality.test.ts",
+        "tests/eval/yalla-plan-review-coverage.test.ts",
+        "tests/scripts/yalla-autopilot.test.ts"
+      ],
+      "coverage_gaps": [],
+      "notes": "These are the only real tests in the template. They deterministically validate the generated proof/inventory artifacts the harness produces, so this category is genuinely PROVEN by `npm test`."
+    },
+    {
+      "category": "ui-journeys",
+      "description": "Browser-facing end-to-end journeys (checkout, forms, public pages, mobile, admin).",
+      "deterministic_seam_available": false,
+      "proof_mode": "inconclusive",
+      "verdict": "INCONCLUSIVE",
+      "verification_strength": "missing",
+      "commands": [],
+      "existing_tests": [],
+      "coverage_gaps": [
+        "This template repo ships no UI, so there is no browser journey to drive.",
+        "A real project would prove core flows with Playwright: checkout, form validation/autofill, public product pages, and mobile responsiveness."
+      ],
+      "notes": "No UI seam exists in this template. Add Playwright specs under tests/ and switch proof_mode to playwright once you have a frontend."
+    },
+    {
+      "category": "schema-migration",
+      "description": "Database migrations, template schema, and schema/runtime coupling seams.",
+      "deterministic_seam_available": true,
+      "proof_mode": "inconclusive",
+      "verdict": "INCONCLUSIVE",
+      "verification_strength": "missing",
+      "commands": [],
+      "existing_tests": [],
+      "coverage_gaps": [
+        "This template repo ships no database or migrations to verify.",
+        "A real project would prove: migration file validity, forward/backward safety, column-writer correctness, and that runtime code matches the migrated schema."
+      ],
+      "notes": "No schema-migration seam exists in this template. Map to existing_tests once your project adds migrations."
+    }
+  ]
+}

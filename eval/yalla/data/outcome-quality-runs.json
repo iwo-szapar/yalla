@@ -1,0 +1,409 @@
+{
+  "batch_id": "2026-06-09-proven-state",
+  "source_branch": "origin/staging",
+  "runs": [
+    {
+      "issue_id": "issue-1166",
+      "issue_url": "https://github.com/second-brain-factory/second-brain-factory-dev/issues/1166",
+      "issue_intent": "Implement PRD 01 proof-contract evals without adding autopilot behavior.",
+      "pr": {
+        "number": 1168,
+        "url": "https://github.com/second-brain-factory/second-brain-factory-dev/pull/1168",
+        "merged_at": "2026-06-09T13:40:01Z",
+        "base": "staging"
+      },
+      "yalla_run_mode": "semi-manual",
+      "real_github_issue": true,
+      "plan": {
+        "summary": "Add proof-contract schema, fixtures, runner, tests, and yalla outcome-verdict instructions."
+      },
+      "acceptance_trace": {
+        "criteria": [
+          {
+            "criterion": "Proof-contract schemas exist and are documented.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "eval/yalla/schemas/proof-contract.ts; eval/yalla/README.md; tests/eval/yalla-proof-contract.test.ts"
+          },
+          {
+            "criterion": "Patched run passes all P0 proof-contract fixtures.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "npm run eval:yalla:proof-contract"
+          }
+        ]
+      },
+      "test_evidence": {
+        "commands": [
+          {
+            "command": "npm run eval:yalla:proof-contract",
+            "status": "pass",
+            "summary": "4 P0 legacy failures proven and all P0 patched fixtures pass."
+          },
+          {
+            "command": "npx vitest run tests/eval/yalla-proof-contract.test.ts",
+            "status": "pass",
+            "summary": "Proof-contract tests passed."
+          },
+          {
+            "command": "npm run typecheck",
+            "status": "pass",
+            "summary": "TypeScript passed."
+          }
+        ],
+        "browser_evidence_required": false,
+        "browser_evidence": []
+      },
+      "review_results": {
+        "checks": [
+          { "name": "security-check", "verdict": "pass" },
+          { "name": "correctness-check", "verdict": "pass" },
+          { "name": "evidence-check", "verdict": "pass" }
+        ]
+      },
+      "pr_checks": [
+        {
+          "name": "Typecheck, lint, unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27209979870/job/80336021880"
+        },
+        {
+          "name": "Unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27209979585/job/80336020761"
+        },
+        {
+          "name": "Integration tests (staging DB)",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27209979585/job/80336020671"
+        }
+      ],
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "human_decisions_needed": []
+      }
+    },
+    {
+      "issue_id": "issue-1173",
+      "issue_url": "https://github.com/second-brain-factory/second-brain-factory-dev/issues/1173",
+      "issue_intent": "Add PRD 02 yalla test inventory eval harness.",
+      "pr": {
+        "number": 1174,
+        "url": "https://github.com/second-brain-factory/second-brain-factory-dev/pull/1174",
+        "merged_at": "2026-06-09T15:22:59Z",
+        "base": "staging"
+      },
+      "yalla_run_mode": "semi-manual",
+      "real_github_issue": true,
+      "plan": {
+        "path": "plans/issue-1173-test-inventory-eval-harness.md",
+        "summary": "Add test inventory schema, fixtures, runner, mock adapter, smoke integration, and tests."
+      },
+      "acceptance_trace": {
+        "criteria": [
+          {
+            "criterion": "Test inventory maps required categories to existing tests or coverage gaps.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "eval/yalla/test-inventory.json; tests/eval/yalla-test-inventory.test.ts"
+          },
+          {
+            "criterion": "Fixture loader rejects likely secrets and hides sealed rubrics.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "tests/eval/yalla-test-inventory.test.ts"
+          }
+        ]
+      },
+      "test_evidence": {
+        "commands": [
+          {
+            "command": "npm run eval:yalla:test-inventory",
+            "status": "pass",
+            "summary": "Inventory valid with six required categories PROVEN."
+          },
+          {
+            "command": "npm run eval:yalla:smoke",
+            "status": "pass",
+            "summary": "Proof-contract and test-inventory suites passed."
+          },
+          {
+            "command": "npm run test",
+            "status": "pass",
+            "summary": "Full Vitest suite passed locally."
+          }
+        ],
+        "browser_evidence_required": false,
+        "browser_evidence": []
+      },
+      "review_results": {
+        "checks": [
+          { "name": "security-check", "verdict": "pass" },
+          { "name": "correctness-check", "verdict": "pass" },
+          { "name": "evidence-check", "verdict": "pass" }
+        ]
+      },
+      "pr_checks": [
+        {
+          "name": "Typecheck, lint, unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27214406881/job/80351947542"
+        },
+        {
+          "name": "Unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27214407347/job/80351949532"
+        },
+        {
+          "name": "Integration tests (staging DB)",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27214407347/job/80351949691"
+        }
+      ],
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "human_decisions_needed": []
+      }
+    },
+    {
+      "issue_id": "issue-1175",
+      "issue_url": "https://github.com/second-brain-factory/second-brain-factory-dev/issues/1175",
+      "issue_intent": "Add PRD 03 plan-quality, review-quality, and test-coverage evals.",
+      "pr": {
+        "number": 1176,
+        "url": "https://github.com/second-brain-factory/second-brain-factory-dev/pull/1176",
+        "merged_at": "2026-06-09T15:27:36Z",
+        "base": "staging"
+      },
+      "yalla_run_mode": "semi-manual",
+      "real_github_issue": true,
+      "plan": {
+        "path": "plans/issue-1175-plan-review-coverage-evals.md",
+        "summary": "Add deterministic plan-quality, review-quality, and test-coverage evals plus smoke integration."
+      },
+      "acceptance_trace": {
+        "criteria": [
+          {
+            "criterion": "Review eval catches Zod/interface drift.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "review_zod_interface_drift fixture; tests/eval/yalla-plan-review-coverage.test.ts"
+          },
+          {
+            "criterion": "Test-coverage eval fails when deterministic seam proposes only model judge.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "test_coverage_deterministic_seam_model_judge fixture; tests/eval/yalla-plan-review-coverage.test.ts"
+          }
+        ]
+      },
+      "test_evidence": {
+        "commands": [
+          {
+            "command": "npm run eval:yalla:plan-review-coverage",
+            "status": "pass",
+            "summary": "All three PRD 03 eval kinds passed."
+          },
+          {
+            "command": "npm run eval:yalla:smoke",
+            "status": "pass",
+            "summary": "Smoke includes PRD 03 evals."
+          },
+          {
+            "command": "npm run test",
+            "status": "pass",
+            "summary": "Full Vitest suite passed locally."
+          }
+        ],
+        "browser_evidence_required": false,
+        "browser_evidence": []
+      },
+      "review_results": {
+        "checks": [
+          { "name": "security-check", "verdict": "pass" },
+          { "name": "correctness-check", "verdict": "pass" },
+          { "name": "evidence-check", "verdict": "pass" }
+        ]
+      },
+      "pr_checks": [
+        {
+          "name": "Typecheck, lint, unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27216718716/job/80360233058"
+        },
+        {
+          "name": "Unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27216718050/job/80360233498"
+        },
+        {
+          "name": "Integration tests (staging DB)",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27216718050/job/80360233592"
+        }
+      ],
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "human_decisions_needed": []
+      }
+    },
+    {
+      "issue_id": "issue-1162",
+      "issue_url": "https://github.com/second-brain-factory/second-brain-factory-dev/issues/1162",
+      "issue_intent": "Stop persisting raw questionnaire bearer-token URLs in email log metadata while preserving rendered email links.",
+      "pr": {
+        "number": 1163,
+        "url": "https://github.com/second-brain-factory/second-brain-factory-dev/pull/1163",
+        "merged_at": "2026-06-09T13:34:46Z",
+        "base": "staging"
+      },
+      "yalla_run_mode": "manual",
+      "real_github_issue": true,
+      "plan": {
+        "path": "plans/issue-1162-redact-questionnaire-token-logs.md",
+        "summary": "Redact only persisted questionnaire_url metadata while keeping full tokenized template variables."
+      },
+      "acceptance_trace": {
+        "criteria": [
+          {
+            "criterion": "Email logs no longer persist raw questionnaire bearer-token URLs.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "tests/api/webhooks/stripe-questionnaire-url.test.ts"
+          },
+          {
+            "criterion": "Email rendering still receives full tokenized questionnaire URL.",
+            "proof_mode": "new-test",
+            "status": "covered",
+            "evidence": "tests/api/webhooks/stripe-questionnaire-url.test.ts"
+          }
+        ]
+      },
+      "test_evidence": {
+        "commands": [
+          {
+            "command": "npx vitest run tests/api/webhooks/stripe-questionnaire-url.test.ts",
+            "status": "pass",
+            "summary": "Regression test proves template variables include tokenized URL while metadata redacts token."
+          },
+          {
+            "command": "npm run typecheck",
+            "status": "pass",
+            "summary": "TypeScript passed."
+          }
+        ],
+        "browser_evidence_required": false,
+        "browser_evidence": []
+      },
+      "review_results": {
+        "checks": [
+          { "name": "security-check", "verdict": "pass" },
+          { "name": "correctness-check", "verdict": "pass" },
+          { "name": "test-quality-check", "verdict": "pass" }
+        ]
+      },
+      "pr_checks": [
+        {
+          "name": "Typecheck, lint, unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27206012436/job/80321907985"
+        },
+        {
+          "name": "Unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27206011941/job/80321906684"
+        },
+        {
+          "name": "Integration tests (staging DB)",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27206011941/job/80321906882"
+        }
+      ],
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "human_decisions_needed": []
+      }
+    },
+    {
+      "issue_id": "issue-1164",
+      "issue_url": "https://github.com/second-brain-factory/second-brain-factory-dev/issues/1164",
+      "issue_intent": "Fix stale platform template count that blocked CI.",
+      "pr": {
+        "number": 1165,
+        "url": "https://github.com/second-brain-factory/second-brain-factory-dev/pull/1165",
+        "merged_at": "2026-06-09T11:55:12Z",
+        "base": "staging"
+      },
+      "yalla_run_mode": "manual",
+      "real_github_issue": true,
+      "plan": {
+        "summary": "Update only seed-data template_count to match actual templates length and unblock CI."
+      },
+      "acceptance_trace": {
+        "criteria": [
+          {
+            "criterion": "template_count matches actual templates.length.",
+            "proof_mode": "existing-test",
+            "status": "covered",
+            "evidence": "tests/lib/db/platform-templates.test.ts"
+          },
+          {
+            "criterion": "Typecheck passes.",
+            "proof_mode": "existing-test",
+            "status": "covered",
+            "evidence": "npm run typecheck"
+          }
+        ]
+      },
+      "test_evidence": {
+        "commands": [
+          {
+            "command": "npx vitest run tests/lib/db/platform-templates.test.ts",
+            "status": "pass",
+            "summary": "Platform templates count regression passed."
+          },
+          {
+            "command": "npm run typecheck",
+            "status": "pass",
+            "summary": "TypeScript passed."
+          }
+        ],
+        "browser_evidence_required": false,
+        "browser_evidence": []
+      },
+      "review_results": {
+        "checks": [
+          { "name": "correctness-check", "verdict": "pass" },
+          { "name": "test-quality-check", "verdict": "pass" },
+          { "name": "reviewability-check", "verdict": "pass" }
+        ]
+      },
+      "pr_checks": [
+        {
+          "name": "Typecheck, lint, unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27199629972/job/80300041141"
+        },
+        {
+          "name": "Unit tests",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27199630036/job/80300041292"
+        },
+        {
+          "name": "Integration tests (staging DB)",
+          "conclusion": "SUCCESS",
+          "url": "https://github.com/second-brain-factory/second-brain-factory-dev/actions/runs/27199630036/job/80300041341"
+        }
+      ],
+      "outcome": {
+        "verdict": "PROVEN",
+        "remaining_delta": [],
+        "human_decisions_needed": []
+      }
+    }
+  ]
+}
