@@ -39,6 +39,23 @@ test_setup_file: tests/setup.ts   # shared setup, or "" if none
 tracking_mode: github
 issue_id_format: "issue-###"      # how the pipeline refers to a unit of work
 
+## Autopilot Defaults (optional)
+
+# These fields document your repo's automation posture. The shipped autopilot
+# command is dry-run only; scheduled or unattended modes should follow
+# docs/autopilot/ and require explicit repo opt-in.
+autopilot:
+  enabled: false
+  level: L0                    # L0, L1, L2, L2.5, or L3
+  human_mode: strict           # fyi, approval, or strict
+  eligible_labels: [yalla-ready]
+  block_labels: [blocked, needs-human, do-not-autopilot]
+  max_risk_tier: low
+  max_files_changed: 12
+  max_runtime_minutes: 45
+  token_budget: "repo-defined"
+  auto_merge: false            # keep false unless explicitly opted in per run
+
 ## Domain Mapping (optional)
 
 # Map task-description keywords → a subsystem label. Used to focus the

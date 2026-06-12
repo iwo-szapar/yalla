@@ -122,6 +122,8 @@ There's also a single-issue **autopilot dry-run** that probes one issue and writ
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
 ```
 
+For scheduled or unattended operation, use the staged runbook in [`docs/autopilot/`](docs/autopilot/). The default posture remains PR-only and dry-run/report-only until the readiness checklist passes.
+
 ## Install
 
 ### Option A — as a Claude Code plugin (recommended)
@@ -192,6 +194,7 @@ Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`). If `gh` is 
 - **Agents** (`agents/`) — the specialists: lead (orchestrator), implementer, tester, reviewer.
 - **Knowledge** (`knowledge/yalla/`) — pipeline mechanics (classification, diagnosis, vertical slices, test seams, artifacts, agent brief, preflight) plus the customizable check definitions in `REVIEW-CHECKS.md` and `PROJECT-CHECKS.md`.
 - **Eval harness** (`eval/yalla/`) — the runnable proof-contract / test-inventory / outcome-quality suites and their fixtures. Repo-root only.
+- **Autopilot docs** (`docs/autopilot/`) — staged scheduler/readiness guidance for moving from local dry-run to PR-only automation.
 
 ## A real-world example
 

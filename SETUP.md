@@ -116,6 +116,8 @@ Single-issue autopilot dry-run — probes one issue, writes `.pipeline/autopilot
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
 ```
 
+If you want scheduled or unattended operation, follow [`docs/autopilot/README.md`](docs/autopilot/README.md) and complete [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) before allowing any mode beyond dry-run/report-only.
+
 You don't need any of this to use Yalla day to day. It's there to keep the proof contract honest as the pipeline evolves.
 
 ## Tracking modes
