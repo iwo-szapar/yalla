@@ -8,6 +8,7 @@ Run one issue locally without mutating GitHub:
 
 ```bash
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
+npm run yalla:autopilot -- queue --mode dry-run
 ```
 
 The dry-run path must remain safe:
@@ -17,6 +18,8 @@ The dry-run path must remain safe:
 - Write `.pipeline/autopilot-state.json` and `.pipeline/loop-telemetry.json`.
 - Make no GitHub mutations.
 - Never claim completion unless the run's proof-contract verdict is `PROVEN`.
+
+The queue dry-run writes `.pipeline/autopilot-queue-report.json`. It uses `yalla-ready` as the default eligibility label and skips `blocked`, `needs-human`, and `do-not-autopilot` by default.
 
 ## Operating Levels
 

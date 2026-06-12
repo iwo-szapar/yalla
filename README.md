@@ -120,9 +120,10 @@ There's also a single-issue **autopilot dry-run** that probes one issue and writ
 
 ```bash
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
+npm run yalla:autopilot -- queue --mode dry-run
 ```
 
-For scheduled or unattended operation, use the staged runbook in [`docs/autopilot/`](docs/autopilot/). The default posture remains PR-only and dry-run/report-only until the readiness checklist passes.
+The queue dry-run ranks eligible issues with the `yalla-ready` label, skips block labels, and writes `.pipeline/autopilot-queue-report.json` without mutating GitHub. For scheduled or unattended operation, use the staged runbook in [`docs/autopilot/`](docs/autopilot/). The default posture remains PR-only and dry-run/report-only until the readiness checklist passes.
 
 ## Install
 

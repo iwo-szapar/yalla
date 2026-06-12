@@ -114,9 +114,10 @@ Single-issue autopilot dry-run — probes one issue, writes `.pipeline/autopilot
 
 ```bash
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
+npm run yalla:autopilot -- queue --mode dry-run
 ```
 
-If you want scheduled or unattended operation, follow [`docs/autopilot/README.md`](docs/autopilot/README.md) and complete [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) before allowing any mode beyond dry-run/report-only.
+The queue command writes `.pipeline/autopilot-queue-report.json`, selects from issues labeled `yalla-ready`, and skips block labels such as `blocked`, `needs-human`, and `do-not-autopilot`. If you want scheduled or unattended operation, follow [`docs/autopilot/README.md`](docs/autopilot/README.md) and complete [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) before allowing any mode beyond dry-run/report-only.
 
 You don't need any of this to use Yalla day to day. It's there to keep the proof contract honest as the pipeline evolves.
 

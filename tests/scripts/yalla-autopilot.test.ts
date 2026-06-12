@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { isMutatingCommand, runYallaAutopilot, type CommandRunner } from '../../scripts/yalla-autopilot.js'
+import { isMutatingCommand, runYallaAutopilot, runYallaAutopilotQueue, type CommandRunner } from '../../scripts/yalla-autopilot.js'
 
 function tempRoot() {
   return mkdtempSync(join(tmpdir(), 'yalla-autopilot-'))
@@ -173,5 +173,100 @@ describe('scripts/yalla-autopilot.ts', () => {
     expect(bash['gh issue create*']).toBe('ask')
     expect(bash['rm *']).toBe('deny')
     expect(bash['sudo *']).toBe('deny')
+  })
+
+  it('writes a report-only queue with the highest priority eligible issue selected', async () => {
+    const calls: string[] = []
+    const runner: CommandRunner = async (command, args) => {
+      calls.push([command, ...args].join(' '))
+      if (calls.length === 1) return { stdout: 'logged in', stderr: '', exitCode: 0 }
+      return {
+        stdout: JSON.stringify([
+          {
+            number: 12,
+            title: 'Low priority task',
+            url: 'https://github.com/example/repo/issues/12',
+            labels: [{ name: 'yalla-ready' }, { name: 'p2' }],
+          },
+          {
+            number: 8,
+            title: 'High priority task',
+            url: 'https://github.com/example/repo/issues/8',
+            labels: [{ name: 'yalla-ready' }, { name: 'p0' }],
+          },
+        ]),
+        stderr: '',
+        exitCode: 0,
+      }
+    }
+
+    const result = await runYallaAutopilotQueue({
+      mode: 'dry-run',
+      rootDir: tempRoot(),
+      repo: 'example-owner/example-repo',
+      commandRunner: runner,
+      now: () => '2026-06-09T18:00:00.000Z',
+    })
+
+    expect(result.status).toBe('report-complete')
+    expect(result.exitCode).toBe(0)
+    expect(calls).toEqual([
+      'gh auth status',
+      'gh issue list --repo example-owner/example-repo --state open --limit 20 --json number,title,url,labels,createdAt,updatedAt --label yalla-ready',
+    ])
+
+    const report = readJson(result.reportPath ?? '')
+    expect(report).toMatchObject({
+      mode: 'dry-run',
+      repo: 'example-owner/example-repo',
+      selected_issue: 'issue-8',
+    })
+    expect(report.candidates).toMatchObject([{ issue_id: 'issue-8', score: 100 }, { issue_id: 'issue-12', score: 60 }])
+    expect(readJson(result.statePath)).toMatchObject({
+      issue_id: 'queue',
+      status: 'report-complete',
+      stop_reason: 'report-only-selected-candidate',
+    })
+  })
+
+  it('skips block-labeled queue issues before ranking', async () => {
+    const result = await runYallaAutopilotQueue({
+      mode: 'dry-run',
+      rootDir: tempRoot(),
+      repo: 'example-owner/example-repo',
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return {
+          stdout: JSON.stringify([
+            { number: 1, title: 'Blocked high priority', labels: [{ name: 'yalla-ready' }, { name: 'p0' }, { name: 'blocked' }] },
+            { number: 2, title: 'Allowed lower priority', labels: [{ name: 'yalla-ready' }, { name: 'p2' }] },
+          ]),
+          stderr: '',
+          exitCode: 0,
+        }
+      },
+      now: () => '2026-06-09T18:00:00.000Z',
+    })
+
+    const report = readJson(result.reportPath ?? '')
+    expect(report.selected_issue).toBe('issue-2')
+    expect(report.skipped).toEqual([{ issue_id: 'issue-1', title: 'Blocked high priority', reason: 'blocked-label:blocked' }])
+  })
+
+  it('stops the queue report before issue listing when GitHub auth is missing', async () => {
+    const calls: string[] = []
+    const result = await runYallaAutopilotQueue({
+      mode: 'dry-run',
+      rootDir: tempRoot(),
+      commandRunner: async (command, args) => {
+        calls.push([command, ...args].join(' '))
+        return { stdout: '', stderr: 'not logged in', exitCode: 1 }
+      },
+    })
+
+    expect(result.status).toBe('blocked')
+    expect(result.reportPath).toBeUndefined()
+    expect(calls).toEqual(['gh auth status'])
+    expect(readJson(result.statePath)).toMatchObject({ stop_reason: 'missing-github-auth' })
   })
 })
