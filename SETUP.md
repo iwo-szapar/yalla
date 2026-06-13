@@ -105,6 +105,8 @@ Here's what happens:
 
 You approve once (the plan) and review one PR at the end. The middle runs itself. A run is only described as done when the verdict is `PROVEN`, and `PROVEN` is backed by the evidence artifacts, not by the agent's say-so.
 
+For first-time setup, run `/onboard` before `/yalla`. It checks your config, labels, issue template, command setup, and writes `.pipeline/yalla-onboarding-dashboard.html` so you can see what is done and what is still missing.
+
 To resume an interrupted run:
 
 ```

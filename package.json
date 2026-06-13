@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Yalla autonomous-coding eval harness + autopilot for Claude Code (standalone, open-source).",
+  "description": "Yalla autonomous-coding eval harness, onboarding dashboard, and autopilot for Claude Code (standalone, open-source).",
   "scripts": {
     "eval:yalla:proof-contract": "tsx eval/yalla/runner/proof-contract-runner.ts",
     "eval:yalla:test-inventory": "tsx eval/yalla/runner/test-inventory-runner.ts",

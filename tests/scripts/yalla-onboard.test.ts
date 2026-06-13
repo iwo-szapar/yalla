@@ -113,4 +113,51 @@ commands:
 
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'github_labels', status: 'pass', detail: 'Skipped for tracking_mode=file-only' })]))
   })
+
+  it('dashboard writes a visual onboarding html report', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root)
+    const result = await runYallaOnboard({
+      command: 'dashboard',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: JSON.stringify([{ name: 'blocked' }]), stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.dashboardPath).toBe(join(root, '.pipeline/yalla-onboarding-dashboard.html'))
+    expect(existsSync(result.dashboardPath ?? '')).toBe(true)
+    const html = readFileSync(result.dashboardPath ?? '', 'utf8')
+    expect(html).toContain('Yalla Onboarding')
+    expect(html).toContain('Missing labels')
+    expect(html).toContain('gh label create yalla-ready')
+  })
+
+  it('dashboard skips missing label card for file-only tracking', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root, `base_branch: main
+tracking_mode: file-only
+test_dir: tests/
+commands:
+  test: "npm test"
+  typecheck: ""
+  build: "npm run build"
+  lint: "npm run lint"
+`)
+    const result = await runYallaOnboard({
+      command: 'dashboard',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        throw new Error('label list should not run')
+      },
+    })
+
+    const html = readFileSync(result.dashboardPath ?? '', 'utf8')
+    expect(result.missingLabels).toEqual([])
+    expect(html).toContain('All required labels present or skipped.')
+  })
 })
