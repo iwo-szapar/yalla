@@ -268,6 +268,17 @@ Verdict rules:
 - `NOT_PROVEN` means evidence or review disproves the issue promise.
 - `INCONCLUSIVE` means proof is blocked or external evidence is unavailable. It does not count as complete or safe for autopilot progression.
 
+### Autopilot State Artifacts
+
+Autopilot state is local by default and should not be committed unless it explains a review decision or the repo intentionally audits loop state in git. See `docs/autopilot/` for the operating model.
+
+- `.pipeline/autopilot-state.json` records selected issue, lock owner, level, mode, and last safe checkpoint.
+- `.pipeline/loop-telemetry.json` records command status, timings, proof verdicts, budget usage, and stop reasons.
+- `.pipeline/run-log.jsonl` is append-only per-attempt history for scheduled loops.
+- `.pipeline/token-budget.json` records soft and hard budget limits for unattended loops.
+
+Any autopilot artifact that reports `NOT_PROVEN`, `INCONCLUSIVE`, exhausted budget, failed review, ambiguous auth, or active kill switch must stop progression instead of opening or advancing work as successful.
+
 ### `.pipeline/ship-manifest.json`
 
 ```json

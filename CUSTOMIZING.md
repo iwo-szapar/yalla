@@ -4,7 +4,7 @@ The pipeline engine is generic. It knows how to classify, plan, build, test, rev
 
 That's the whole design. The skills and agents in `.claude/skills/` and `.claude/agents/` should look the same in every repo. The difference between a brand-new install and a config that's run thousands of tasks is entirely in `YALLA.md` and `knowledge/yalla/PROJECT-CHECKS.md`. Keep it that way — when you find yourself wanting to fork an agent, you almost always want a new gotcha or a new risk gate instead.
 
-The mature reference for everything below is [`examples/sbf/`](examples/sbf/) — a real production config from an 8-subsystem Vite + Vercel + Stripe + Postgres app, plus the real proof fixtures in `eval/yalla/data/`. Read it after this guide; it shows what these sections look like once they've earned their keep.
+If you are onboarding a repository for the first time, start with [`docs/onboarding/`](docs/onboarding/) and then come back here for the deeper rationale. The mature reference for everything below is [`examples/sbf/`](examples/sbf/) — a real production config from an 8-subsystem Vite + Vercel + Stripe + Postgres app, plus the real proof fixtures in `eval/yalla/data/`. Read it after this guide; it shows what these sections look like once they've earned their keep.
 
 ## The config seam, section by section
 
@@ -30,6 +30,8 @@ A test command that doesn't exist is the single most common reason a first run f
 ### Task Tracking
 
 `tracking_mode` is `github` (default), `file-only`, or `db`. `issue_id_format` is just how the pipeline names a unit of work (`issue-###`). Most projects never touch this. See [SETUP.md](SETUP.md) for when each mode applies.
+
+For GitHub mode, labels and issue shape matter. Use [`docs/onboarding/task-system.md`](docs/onboarding/task-system.md) to create the default `yalla-ready`, block, and priority labels and to seed an issue template.
 
 ### Domain Mapping
 
@@ -74,6 +76,10 @@ The point of gates is proportionality. A docs typo should not be dragged through
 ### Scope Mode Defaults
 
 How aggressively to scope each kind of work: `EXPANSION` (greenfield, new structure allowed), `HOLD` (match existing patterns), `REDUCTION` (minimal surgical change). The defaults are sensible — new features expand, bug fixes hold, hotfixes reduce. Tune only if your team has a different instinct about, say, refactors.
+
+### Autopilot Defaults
+
+The `autopilot` section documents whether this repo is allowed to run report-only or unattended loops. Keep `enabled: false` and `level: L0` until the queue dry-run works and the checklist in [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) passes. Autopilot uses the same labels described in the task-system onboarding doc.
 
 ## How task classification routes ceremony
 
@@ -153,6 +159,8 @@ The split is what keeps review proportional. Baseline is cheap and universal; tr
 ## Extending the eval harness
 
 The eval harness (`eval/yalla/`) grades the pipeline against itself, and its proof checks are driven by JSON fixtures under `eval/yalla/data/`. The shipped fixtures are real SBF incidents and PRDs — `zod_interface_drift_review_gap`, `checkout_surface_parity_missing`, `deterministic_seam_model_judge_only`, and so on — each one a regression guard for a specific failure mode the pipeline must keep catching.
+
+Use [`docs/onboarding/evals.md`](docs/onboarding/evals.md) for the practical checklist: when to add a fixture, which fixture file to use, and what to verify before increasing automation.
 
 To add your own proof check:
 

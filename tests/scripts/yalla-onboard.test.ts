@@ -1,0 +1,83 @@
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { runYallaOnboard } from '../../scripts/yalla-onboard.js'
+
+function tempRoot() {
+  return mkdtempSync(join(tmpdir(), 'yalla-onboard-'))
+}
+
+function writeConfig(root: string, content = '') {
+  mkdirSync(join(root, '.claude'), { recursive: true })
+  writeFileSync(
+    join(root, '.claude', 'YALLA.md'),
+    content || `repo: "owner/repo"
+base_branch: main
+tracking_mode: github
+test_dir: tests/
+commands:
+  test: "npm test"
+  typecheck: "npm run typecheck"
+  build: "npm run build"
+  lint: "npm run lint"
+task_system:
+  ready_label: yalla-ready
+  block_labels: [blocked, needs-human]
+  priority_labels: [p0, p1]
+  issue_template: ".github/ISSUE_TEMPLATE/yalla-task.md"
+autopilot:
+  enabled: false
+  level: L0
+`
+  )
+}
+
+describe('scripts/yalla-onboard.ts', () => {
+  it('checks config, commands, auth, labels, and autopilot defaults', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root)
+    const result = await runYallaOnboard({
+      command: 'check',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: JSON.stringify([{ name: 'yalla-ready' }, { name: 'blocked' }, { name: 'needs-human' }, { name: 'p0' }, { name: 'p1' }]), stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.exitCode).toBe(0)
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'config', status: 'pass' }), expect.objectContaining({ name: 'github_labels', status: 'pass' })]))
+  })
+
+  it('labels dry-run reports missing create commands without mutation', async () => {
+    const root = tempRoot()
+    writeConfig(root)
+    const calls: string[] = []
+    const result = await runYallaOnboard({
+      command: 'labels',
+      rootDir: root,
+      commandRunner: async (command, args) => {
+        calls.push([command, ...args].join(' '))
+        return { stdout: JSON.stringify([{ name: 'blocked' }]), stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.missingLabels).toEqual(['yalla-ready', 'needs-human', 'p0', 'p1'])
+    expect(result.commands?.[0]).toContain('gh label create yalla-ready')
+    expect(calls).toEqual(['gh label list --json name --repo owner/repo'])
+    expect(result.applied).toBe(false)
+  })
+
+  it('template apply writes the issue template to configured target', async () => {
+    const root = tempRoot()
+    writeConfig(root)
+    const result = await runYallaOnboard({ command: 'template', rootDir: root, apply: true })
+
+    expect(result.applied).toBe(true)
+    expect(result.templateTarget).toBe(join(root, '.github/ISSUE_TEMPLATE/yalla-task.md'))
+    expect(existsSync(result.templateTarget ?? '')).toBe(true)
+    expect(readFileSync(result.templateTarget ?? '', 'utf8')).toContain('## Acceptance Criteria')
+  })
+})

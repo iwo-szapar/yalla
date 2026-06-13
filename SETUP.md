@@ -62,6 +62,16 @@ your-project/.claude/
 
 The installer never overwrites an existing `.claude/YALLA.md`, so re-running it to pick up engine updates is safe.
 
+For a new repository, use [`docs/onboarding/README.md`](docs/onboarding/README.md) after install. It is the end-to-end checklist for config, labels, task templates, project checks, evals, and autopilot readiness.
+
+Executable onboarding checks live in the cloned Yalla repo:
+
+```bash
+npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+```
+
 ## First-run config
 
 Open `.claude/YALLA.md` and set five things. Everything else has sane defaults.
@@ -73,6 +83,8 @@ Open `.claude/YALLA.md` and set five things. Everything else has sane defaults.
 5. **risk_gates** — which subsystem checks to arm (payments, migrations, async, auth, …). Only the ones that match your stack.
 
 That's the whole adaptation. No code changes. The deeper "how do I fit this to my project" guidance lives in [CUSTOMIZING.md](CUSTOMIZING.md).
+
+If you use GitHub tracking, also create the labels and issue template from [`docs/onboarding/task-system.md`](docs/onboarding/task-system.md) before trying queue dry-run or scheduled automation.
 
 ## Your first task
 
@@ -114,7 +126,10 @@ Single-issue autopilot dry-run — probes one issue, writes `.pipeline/autopilot
 
 ```bash
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
+npm run yalla:autopilot -- queue --mode dry-run
 ```
+
+The queue command writes `.pipeline/autopilot-queue-report.json`, selects from issues labeled `yalla-ready`, and skips block labels such as `blocked`, `needs-human`, and `do-not-autopilot`. If you want scheduled or unattended operation, follow [`docs/autopilot/README.md`](docs/autopilot/README.md) and complete [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) before allowing any mode beyond dry-run/report-only.
 
 You don't need any of this to use Yalla day to day. It's there to keep the proof contract honest as the pipeline evolves.
 

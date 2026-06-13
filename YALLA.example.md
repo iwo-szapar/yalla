@@ -39,6 +39,43 @@ test_setup_file: tests/setup.ts   # shared setup, or "" if none
 tracking_mode: github
 issue_id_format: "issue-###"      # how the pipeline refers to a unit of work
 
+## Task System (optional, recommended for GitHub mode)
+
+# These labels should exist in GitHub if you use queue dry-run or scheduled
+# autopilot. See docs/onboarding/task-system.md for setup commands and the
+# recommended issue template.
+task_system:
+  ready_label: yalla-ready
+  block_labels: [blocked, needs-human, do-not-autopilot]
+  priority_labels: [p0, p1, p2]
+  risk_labels: [risk:low, risk:medium, risk:high]
+  issue_template: ".github/ISSUE_TEMPLATE/yalla-task.md"
+
+## Autopilot Defaults (optional)
+
+# These fields document your repo's automation posture. The shipped autopilot
+# command is dry-run only; scheduled or unattended modes should follow
+# docs/autopilot/ and require explicit repo opt-in.
+autopilot:
+  enabled: false
+  level: L0                    # L0, L1, L2, L2.5, or L3
+  human_mode: strict           # fyi, approval, or strict
+  eligible_labels: [yalla-ready]
+  block_labels: [blocked, needs-human, do-not-autopilot]
+  max_risk_tier: low
+  max_files_changed: 12
+  max_runtime_minutes: 45
+  token_budget: "repo-defined"
+  auto_merge: false            # keep false unless explicitly opted in per run
+
+## Eval Posture (optional)
+
+# The bundled evals live in the Yalla repo. Add project-specific fixtures after
+# real failures or recurring review misses; see docs/onboarding/evals.md.
+evals:
+  smoke_command: "npm run eval:yalla:smoke"
+  project_fixtures_required_before_autopilot: true
+
 ## Domain Mapping (optional)
 
 # Map task-description keywords → a subsystem label. Used to focus the

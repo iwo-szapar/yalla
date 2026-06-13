@@ -120,7 +120,10 @@ There's also a single-issue **autopilot dry-run** that probes one issue and writ
 
 ```bash
 npm run yalla:autopilot -- run --issue issue-### --mode dry-run
+npm run yalla:autopilot -- queue --mode dry-run
 ```
+
+The queue dry-run ranks eligible issues with the `yalla-ready` label, skips block labels, and writes `.pipeline/autopilot-queue-report.json` without mutating GitHub. For scheduled or unattended operation, use the staged runbook in [`docs/autopilot/`](docs/autopilot/). The default posture remains PR-only and dry-run/report-only until the readiness checklist passes.
 
 ## Install
 
@@ -161,6 +164,16 @@ your-project/.claude/
 
 The installer copies only the engine (`skills/`, `agents/`, `knowledge/yalla/`) and seeds `YALLA.md`. The eval harness stays at the repo root — it's not part of your `.claude/`.
 
+For a first-time repository setup, follow [`docs/onboarding/`](docs/onboarding/) after install. It covers the project config, GitHub labels, task template, eval fixtures, and autopilot readiness path.
+
+You can also run the executable onboarding check from the Yalla repo:
+
+```bash
+npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+```
+
 ## Configure
 
 Open `.claude/YALLA.md` and set five things:
@@ -192,6 +205,8 @@ Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`). If `gh` is 
 - **Agents** (`agents/`) — the specialists: lead (orchestrator), implementer, tester, reviewer.
 - **Knowledge** (`knowledge/yalla/`) — pipeline mechanics (classification, diagnosis, vertical slices, test seams, artifacts, agent brief, preflight) plus the customizable check definitions in `REVIEW-CHECKS.md` and `PROJECT-CHECKS.md`.
 - **Eval harness** (`eval/yalla/`) — the runnable proof-contract / test-inventory / outcome-quality suites and their fixtures. Repo-root only.
+- **Onboarding docs** (`docs/onboarding/`) — what each repo needs: config, labels, issue shape, project checks, and eval fixtures.
+- **Autopilot docs** (`docs/autopilot/`) — staged scheduler/readiness guidance for moving from local dry-run to PR-only automation.
 
 ## A real-world example
 
