@@ -226,3 +226,15 @@ Run for medium/high-risk or broad diffs, not every tiny fix.
 - Non-Engineer Summary is missing for non-trivial work
 - Summary describes code mechanics instead of business/user impact
 - Tradeoff or recovery path a non-engineer must decide on is omitted or misleading
+
+## memory-routing-check
+
+Only meaningful when `.claude/YALLA.md` configures a `memory:` store with `save_enabled: true`. Dormant otherwise.
+
+> "Did durable knowledge from this run go to the configured memory store (e.g. `memory_knowledge`) and `docs/learnings/`, rather than ad-hoc files scattered under a `memory/` directory?"
+
+**Fail criteria:**
+- A new arbitrary file was created under `memory/` when the configured store should have been used
+- A learning was written to a file but never inserted into the store, so Phase 0b can never recall it
+- The memory INSERT is missing `tags_namespace` or the matched `domain`/`"directive"` tags, making it unrecallable
+- Wisdom that fails the directive test (see MEMORY-PROTOCOL.md) was stored as if it were a directive

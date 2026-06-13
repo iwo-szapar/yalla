@@ -66,6 +66,7 @@ Read these on demand. They are the source of truth for the upgraded pipeline:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` — evidence schemas and artifact commit policy
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md` — durable issue contract
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md` — universal, risk-triggered, and architecture-doc alignment checks
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/MEMORY-PROTOCOL.md` — optional Phase 0b recall + Phase 5 save, only when `.claude/YALLA.md` sets a `memory:` block
 
 ## Imported Cursor Team-Kit Patterns
 
@@ -241,6 +242,26 @@ git worktree add -b "session/issue-$ISSUE_NUMBER-$SLUG" ".claude/worktrees/issue
 If already in a Claude Code worktree flow, use the equivalent worktree-entry mechanism.
 
 State must include `issue_number`, `issue_url`, `branch`, `task_type`, `scope_mode`, `required_gates`, `phase_split_required`, `risk_tier`, `evidence_mode`, `architecture_doc_gate`, `architecture_doc_gate_reason`, `merge_policy`, and `phase: "1-plan"`. It must not introduce a parallel ID scheme outside `issue-###`.
+
+---
+
+## Phase 0b: Pre-Flight Recall (optional)
+
+Runs only when `.claude/YALLA.md` defines a `memory:` block with `recall_enabled: true`. Independent of `tracking_mode` — a repo can track tasks in GitHub Issues yet recall durable directives from a project memory store. If no `memory:` block exists, skip this phase entirely. See `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/MEMORY-PROTOCOL.md`.
+
+1. Read the `memory:` config: `recall_tool` (the MCP tool that runs the query, e.g. `mcp__supabase__execute_sql`), `recall_query` (a SQL or query template with `{namespace}`, `{domain}`, `{keyword}` placeholders), and `tags_namespace`.
+2. Map the task to domains using the YALLA.md `domains:` mapping (already produced in Phase 0a).
+3. Run the configured `recall_query` for each matched domain plus the raw task keywords, limiting to the most recent handful of directives. A reference shape:
+   ```sql
+   SELECT title, content FROM memory_knowledge
+   WHERE tags @> '{namespace}'::jsonb
+     AND (tags @> '["{domain}"]'::jsonb OR content ILIKE '%{keyword}%')
+   ORDER BY created_at DESC LIMIT 5;
+   ```
+4. Pre-load recalled directives as hard constraints for Phase 1 planning — treat them like YALLA.md gotchas.
+5. Record the recalled directive titles in `.pipeline-state.json` (`recalled_directives`) so the plan and compound phases can reference them. If recall returns nothing, record `recalled_directives: []` and continue.
+
+Recall is read-only. Never block the pipeline on a memory miss; a missing or failed memory store is a skipped phase, not a halt.
 
 ---
 
@@ -611,6 +632,19 @@ Route durable learnings to the smallest lasting home:
 - `.pipeline/progress.md` only for ephemeral handoff context that should not persist after the PR.
 
 If there are learnings, write them to the selected destination with actionable directives and reference `issue-###`. If not, record a short skip reason in the compound artifact/state. Ask whether the run exposed a durable rule that would prevent the same mistake in future work. Do not update durable docs for one-off preferences or local context rot.
+
+### Optional: durable memory store
+
+When `.claude/YALLA.md` defines a `memory:` block with `save_enabled: true`, also persist each actionable directive to the configured store (dual-write — store plus git history), so Phase 0b can recall it on future runs:
+
+1. Apply the directive test from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/MEMORY-PROTOCOL.md`: a directive must be pasteable into Phase 0 and immediately change how an agent plans. If it needs interpretation, it is wisdom — discard it.
+2. Write it to `docs/learnings/YYYY-MM-DD-[topic].md` (git history) **and** insert it into the store via the configured `save_tool`/`save_query`, tagging with `tags_namespace` plus the matched `domain` and `"directive"`. Reference shape:
+   ```sql
+   INSERT INTO memory_knowledge (title, content, tags)
+   VALUES ('[directive title]', '[directive + why + file/pattern reference]',
+           '{namespace + ["[domain]", "directive"]}'::jsonb);
+   ```
+3. If `memory:` is absent or `save_enabled` is false, this step is skipped — the `docs/learnings/` write above still applies.
 
 Reference learnings against `issue-###`, not a parallel ID scheme.
 

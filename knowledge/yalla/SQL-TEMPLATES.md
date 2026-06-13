@@ -63,3 +63,43 @@ WHERE id = 'issue-###';
 A `pipeline_memories` table is an *optional* add-on within DB mode that gives a queryable audit trail across parallel runs. It is not required: teammates report to the lead via SendMessage, and the pipeline relies on `.pipeline-state.json` + `description_full` by default.
 
 If you want it, create an append-only table keyed by `task_id` (e.g. columns `task_id`, `phase`, `role`, `memory_type`, `content`, `metadata jsonb`, `created_at`). Keep `task_id` as the partition key so parallel runs never cross-contaminate, then query by `task_id ORDER BY id` for the timeline.
+
+## Optional: durable directive store (for the `memory:` config block)
+
+Backs Phase 0b pre-flight recall and the Phase 5 memory-save step (see `MEMORY-PROTOCOL.md`). Independent of `tracking_mode` — point `memory.recall_tool`/`save_tool` at whatever runs SQL for your store. The `tags` JSONB column is what recall filters on, so index it.
+
+```sql
+CREATE TABLE memory_knowledge (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title      TEXT NOT NULL,
+  content    TEXT NOT NULL,            -- the directive: what to do + why + a file/pattern reference
+  tags       JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX idx_memory_knowledge_tags ON memory_knowledge USING GIN (tags);
+
+-- Optional companion for decisions, if you want rationale separate from directives.
+CREATE TABLE memory_decisions (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id    TEXT,                     -- issue-### (or your task id scheme)
+  decision   TEXT NOT NULL,
+  rationale  TEXT,
+  tags       JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+Recall reference query (Phase 0b) and save reference insert (Phase 5):
+
+```sql
+-- recall
+SELECT title, content FROM memory_knowledge
+WHERE tags @> '["yalla"]'::jsonb
+  AND (tags @> '["<domain>"]'::jsonb OR content ILIKE '%<keyword>%')
+ORDER BY created_at DESC LIMIT 5;
+
+-- save
+INSERT INTO memory_knowledge (title, content, tags)
+VALUES ('<directive title>', '<directive + why + file/pattern>',
+        '["yalla", "<domain>", "directive"]'::jsonb);
+```

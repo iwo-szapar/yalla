@@ -76,6 +76,22 @@ evals:
   smoke_command: "npm run eval:yalla:smoke"
   project_fixtures_required_before_autopilot: true
 
+## Memory (optional)
+
+# A durable directive store the pipeline recalls before planning (Phase 0b) and
+# writes to after compounding (Phase 5). Independent of `tracking_mode` — you can
+# track tasks in GitHub Issues yet recall learnings from a project memory store.
+# Omit this whole section to disable both. See knowledge/yalla/MEMORY-PROTOCOL.md
+# and the optional memory tables in knowledge/yalla/SQL-TEMPLATES.md.
+memory:
+  recall_enabled: false             # Phase 0b: pre-load prior directives as constraints
+  save_enabled: false               # Phase 5: persist new actionable directives
+  recall_tool: ""                   # MCP tool that runs the query, e.g. mcp__supabase__execute_sql
+  save_tool: ""                     # usually the same tool as recall_tool
+  tags_namespace: ["yalla"]         # JSONB tag root; append an org/repo tag for multi-project stores
+  # recall_query / save_query: optional overrides. The pipeline uses the reference
+  # shapes in MEMORY-PROTOCOL.md when these are blank. Placeholders: {namespace} {domain} {keyword}
+
 ## Domain Mapping (optional)
 
 # Map task-description keywords → a subsystem label. Used to focus the
@@ -123,6 +139,8 @@ risk_gates:
     triggers_on: [frontend]
   - name: doc-alignment-check
     triggers_on: [api, public-docs]
+  - name: memory-routing-check       # only meaningful when a `memory:` store is configured
+    triggers_on: [docs, learnings, knowledge]
 
 ## Scope Mode Defaults (optional)
 
