@@ -1,0 +1,44 @@
+name: Yalla Autopilot Dry-Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Autopilot mode"
+        required: true
+        default: "dry-run"
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: yalla-autopilot-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  queue-dry-run:
+    if: ${{ inputs.mode == 'dry-run' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Queue report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YALLA_REPO: ${{ github.repository }}
+        run: npm run yalla:autopilot -- queue --mode dry-run
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: yalla-autopilot-artifacts
+          path: .pipeline/*
+          if-no-files-found: warn

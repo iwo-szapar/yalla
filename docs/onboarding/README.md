@@ -35,6 +35,16 @@ Recommended before autopilot:
 8. Run `npm run yalla:autopilot -- queue --mode dry-run` only after labels exist.
 9. Move to scheduled/report-only automation only after the autopilot readiness checklist passes.
 
+Executable checks:
+
+```bash
+npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+```
+
+Only `--apply` mutates labels or writes the issue template. Dry-run commands only report what would happen.
+
 ## Config Checklist
 
 Open `.claude/YALLA.md` and fill these sections in this order:

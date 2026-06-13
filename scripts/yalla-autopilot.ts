@@ -4,6 +4,7 @@ import { execFile, execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { promisify } from 'node:util'
+import { loadYallaConfig } from './yalla-config.js'
 
 const execFileAsync = promisify(execFile)
 
@@ -57,6 +58,7 @@ export type AutopilotQueueOptions = {
   mode: Mode
   repo?: string
   rootDir?: string
+  configPath?: string
   commandRunner?: CommandRunner
   now?: () => string
   eligibleLabels?: string[]
@@ -129,6 +131,8 @@ type QueueReport = {
     reason: string
   }>
   generated_at: string
+  config_path?: string
+  config_source: string
 }
 
 /**
@@ -179,19 +183,21 @@ function parseQueueArgs(argv: string[]): { command: 'queue' } & AutopilotQueueOp
   let repo: string | undefined
   const eligibleLabels: string[] = []
   const blockLabels: string[] = []
+  let configPath: string | undefined
   let limit = 20
 
   for (let index = 1; index < argv.length; index++) {
     const arg = argv[index]
     if (arg === '--mode') mode = parseMode(argv[++index] ?? '')
     else if (arg === '--repo') repo = argv[++index] ?? ''
+    else if (arg === '--config') configPath = argv[++index] ?? ''
     else if (arg === '--label') eligibleLabels.push(argv[++index] ?? '')
     else if (arg === '--block-label') blockLabels.push(argv[++index] ?? '')
     else if (arg === '--limit') limit = Number(argv[++index] ?? limit)
     else throw new Error(`Unknown arg: ${arg}`)
   }
 
-  return { command: 'queue', mode, repo, eligibleLabels, blockLabels, limit }
+  return { command: 'queue', mode, repo, configPath, eligibleLabels, blockLabels, limit }
 }
 
 function parseMode(value: string): Mode {
@@ -303,15 +309,19 @@ export async function runYallaAutopilot(options: AutopilotOptions): Promise<Auto
 
 export async function runYallaAutopilotQueue(options: AutopilotQueueOptions): Promise<AutopilotRunResult> {
   const mode = parseMode(options.mode)
-  const repo = options.repo ?? DEFAULT_REPO
   const rootDir = options.rootDir ?? process.cwd()
+  const loadedConfig = loadYallaConfig({ rootDir, configPath: options.configPath })
+  const config = loadedConfig.config
+  const repo = options.repo ?? config.repo ?? DEFAULT_REPO
   const now = options.now ?? (() => new Date().toISOString())
   const startedAt = now()
   const commandRunner = options.commandRunner ?? defaultCommandRunner
   const commandResults: CommandRecord[] = []
   const sideEffectsAttempted: string[] = []
-  const eligibleLabels = cleanLabels(options.eligibleLabels?.length ? options.eligibleLabels : ['yalla-ready'])
-  const blockLabels = cleanLabels(options.blockLabels?.length ? options.blockLabels : ['blocked', 'needs-human', 'do-not-autopilot'])
+  const configEligibleLabels = config.autopilot.eligibleLabels.length ? config.autopilot.eligibleLabels : config.taskSystem.readyLabel ? [config.taskSystem.readyLabel] : []
+  const configBlockLabels = config.autopilot.blockLabels.length ? config.autopilot.blockLabels : config.taskSystem.blockLabels
+  const eligibleLabels = cleanLabels(options.eligibleLabels?.length ? options.eligibleLabels : configEligibleLabels.length ? configEligibleLabels : ['yalla-ready'])
+  const blockLabels = cleanLabels(options.blockLabels?.length ? options.blockLabels : configBlockLabels.length ? configBlockLabels : ['blocked', 'needs-human', 'do-not-autopilot'])
   const limit = Number.isFinite(options.limit) && options.limit && options.limit > 0 ? Math.floor(options.limit) : 20
 
   async function run(command: string, args: string[]) {
@@ -351,6 +361,8 @@ export async function runYallaAutopilotQueue(options: AutopilotQueueOptions): Pr
     repo,
     eligibleLabels,
     blockLabels,
+    configPath: loadedConfig.path,
+    configSource: loadedConfig.source,
     generatedAt: now(),
     issues: parseIssueList(issueList.stdout),
   })
@@ -387,6 +399,8 @@ function buildQueueReport(input: {
   repo: string
   eligibleLabels: string[]
   blockLabels: string[]
+  configPath?: string
+  configSource: string
   generatedAt: string
   issues: QueueIssue[]
 }): QueueReport {
@@ -422,6 +436,8 @@ function buildQueueReport(input: {
     candidates,
     skipped,
     generated_at: input.generatedAt,
+    config_path: input.configPath,
+    config_source: input.configSource,
   }
 }
 

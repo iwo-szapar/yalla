@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -227,6 +227,37 @@ describe('scripts/yalla-autopilot.ts', () => {
       status: 'report-complete',
       stop_reason: 'report-only-selected-candidate',
     })
+  })
+
+  it('uses queue labels and repo from YALLA config by default', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, '.claude'), { recursive: true })
+    writeFileSync(
+      join(root, '.claude/YALLA.md'),
+      `repo: "config-owner/config-repo"
+task_system:
+  ready_label: ready-ai
+  block_labels: [blocked-ai]
+autopilot:
+  block_labels: [do-not-run]
+`
+    )
+    const calls: string[] = []
+
+    await runYallaAutopilotQueue({
+      mode: 'dry-run',
+      rootDir: root,
+      commandRunner: async (command, args) => {
+        calls.push([command, ...args].join(' '))
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: '[]', stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(calls).toEqual([
+      'gh auth status',
+      'gh issue list --repo config-owner/config-repo --state open --limit 20 --json number,title,url,labels,createdAt,updatedAt --label ready-ai',
+    ])
   })
 
   it('skips block-labeled queue issues before ranking', async () => {

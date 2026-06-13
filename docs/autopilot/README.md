@@ -96,6 +96,8 @@ If you wire this into GitHub Actions, keep the workflow conservative:
 - Use concurrency groups so one repo cannot run two autopilot jobs at once.
 - Keep the default mode `dry-run` until the readiness checklist passes.
 
+A copyable workflow template lives at `docs/autopilot/templates/yalla-autopilot.yml`. It is `workflow_dispatch` only, runs queue dry-run, and uploads `.pipeline/*`; copy it into a target repo only after onboarding checks pass.
+
 ## OpenCode Runtime Pattern
 
 When using an OpenCode GitHub Action or other coding runtime, preserve the maker/checker split:

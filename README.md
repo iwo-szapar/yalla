@@ -166,6 +166,14 @@ The installer copies only the engine (`skills/`, `agents/`, `knowledge/yalla/`) 
 
 For a first-time repository setup, follow [`docs/onboarding/`](docs/onboarding/) after install. It covers the project config, GitHub labels, task template, eval fixtures, and autopilot readiness path.
 
+You can also run the executable onboarding check from the Yalla repo:
+
+```bash
+npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+```
+
 ## Configure
 
 Open `.claude/YALLA.md` and set five things:

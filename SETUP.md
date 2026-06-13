@@ -64,6 +64,14 @@ The installer never overwrites an existing `.claude/YALLA.md`, so re-running it 
 
 For a new repository, use [`docs/onboarding/README.md`](docs/onboarding/README.md) after install. It is the end-to-end checklist for config, labels, task templates, project checks, evals, and autopilot readiness.
 
+Executable onboarding checks live in the cloned Yalla repo:
+
+```bash
+npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+```
+
 ## First-run config
 
 Open `.claude/YALLA.md` and set five things. Everything else has sane defaults.
