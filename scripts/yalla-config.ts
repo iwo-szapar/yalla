@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 
 export type YallaConfig = {
   repo?: string
@@ -31,8 +31,15 @@ export type YallaConfig = {
 
 export type LoadedYallaConfig = {
   path?: string
+  rootDir: string
   source: 'explicit' | 'env' | 'project' | 'missing'
   config: YallaConfig
+}
+
+export function inferConfigRoot(configPath: string) {
+  const normalized = configPath.replace(/\\/g, '/')
+  if (normalized.endsWith('/.claude/YALLA.md')) return dirname(dirname(configPath))
+  return dirname(configPath)
 }
 
 const DEFAULT_CONFIG: YallaConfig = {
@@ -55,11 +62,13 @@ export function loadYallaConfig(options: { rootDir?: string; configPath?: string
   const found = candidates.find(candidate => existsSync(candidate.path))
 
   if (!found) {
-    return { source: 'missing', config: cloneDefaultConfig() }
+    return { source: 'missing', rootDir, config: cloneDefaultConfig() }
   }
 
+  const configRoot = found.source === 'explicit' || found.source === 'env' ? inferConfigRoot(found.path) : rootDir
   return {
     path: found.path,
+    rootDir: configRoot,
     source: found.source,
     config: parseYallaConfig(readFileSync(found.path, 'utf8')),
   }

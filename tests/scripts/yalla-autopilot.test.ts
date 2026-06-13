@@ -246,7 +246,7 @@ autopilot:
 
     await runYallaAutopilotQueue({
       mode: 'dry-run',
-      rootDir: root,
+      configPath: join(root, '.claude/YALLA.md'),
       commandRunner: async (command, args) => {
         calls.push([command, ...args].join(' '))
         if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
@@ -258,6 +258,24 @@ autopilot:
       'gh auth status',
       'gh issue list --repo config-owner/config-repo --state open --limit 20 --json number,title,url,labels,createdAt,updatedAt --label ready-ai',
     ])
+  })
+
+  it('writes queue artifacts under the target root inferred from absolute config path', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, '.claude'), { recursive: true })
+    writeFileSync(join(root, '.claude/YALLA.md'), 'repo: "owner/repo"\n')
+
+    const result = await runYallaAutopilotQueue({
+      mode: 'dry-run',
+      configPath: join(root, '.claude/YALLA.md'),
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: '[]', stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.reportPath).toBe(join(root, '.pipeline/autopilot-queue-report.json'))
+    expect(result.statePath).toBe(join(root, '.pipeline/autopilot-state.json'))
   })
 
   it('skips block-labeled queue issues before ranking', async () => {

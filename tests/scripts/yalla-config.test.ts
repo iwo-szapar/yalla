@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { loadYallaConfig, parseYallaConfig } from '../../scripts/yalla-config.js'
+import { inferConfigRoot, loadYallaConfig, parseYallaConfig } from '../../scripts/yalla-config.js'
 
 function tempRoot() {
   return mkdtempSync(join(tmpdir(), 'yalla-config-'))
@@ -64,7 +64,15 @@ evals:
 
     expect(loaded.source).toBe('explicit')
     expect(loaded.path).toBe(join(root, '.claude', 'YALLA.md'))
+    expect(loaded.rootDir).toBe(root)
     expect(loaded.config.repo).toBe('owner/repo')
+  })
+
+  it('infers target root from absolute .claude/YALLA.md paths', () => {
+    const root = tempRoot()
+    const configPath = join(root, '.claude', 'YALLA.md')
+
+    expect(inferConfigRoot(configPath)).toBe(root)
   })
 
   it('uses YALLA_CONFIG_PATH when no explicit path is provided', () => {

@@ -309,9 +309,10 @@ export async function runYallaAutopilot(options: AutopilotOptions): Promise<Auto
 
 export async function runYallaAutopilotQueue(options: AutopilotQueueOptions): Promise<AutopilotRunResult> {
   const mode = parseMode(options.mode)
-  const rootDir = options.rootDir ?? process.cwd()
-  const loadedConfig = loadYallaConfig({ rootDir, configPath: options.configPath })
+  const initialRootDir = options.rootDir ?? process.cwd()
+  const loadedConfig = loadYallaConfig({ rootDir: initialRootDir, configPath: options.configPath })
   const config = loadedConfig.config
+  const rootDir = options.rootDir ?? loadedConfig.rootDir
   const repo = options.repo ?? config.repo ?? DEFAULT_REPO
   const now = options.now ?? (() => new Date().toISOString())
   const startedAt = now()
@@ -496,7 +497,7 @@ function finishRun(input: {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2))
-  const repo = options.repo ?? resolveRepo()
+  const repo = options.repo ?? (options.command === 'run' ? resolveRepo() : undefined)
   const result =
     options.command === 'run'
       ? await runYallaAutopilot({ ...options, repo })

@@ -80,4 +80,37 @@ describe('scripts/yalla-onboard.ts', () => {
     expect(existsSync(result.templateTarget ?? '')).toBe(true)
     expect(readFileSync(result.templateTarget ?? '', 'utf8')).toContain('## Acceptance Criteria')
   })
+
+  it('template dry-run targets the project root inferred from an absolute config path', async () => {
+    const root = tempRoot()
+    writeConfig(root)
+    const result = await runYallaOnboard({ command: 'template', configPath: join(root, '.claude/YALLA.md') })
+
+    expect(result.templateTarget).toBe(join(root, '.github/ISSUE_TEMPLATE/yalla-task.md'))
+    expect(result.applied).toBe(false)
+  })
+
+  it('skips label checks when tracking mode is file-only', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root, `base_branch: main
+tracking_mode: file-only
+test_dir: tests/
+commands:
+  test: "npm test"
+  typecheck: ""
+  build: "npm run build"
+  lint: "npm run lint"
+`)
+    const result = await runYallaOnboard({
+      command: 'check',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        throw new Error('label list should not run')
+      },
+    })
+
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'github_labels', status: 'pass', detail: 'Skipped for tracking_mode=file-only' })]))
+  })
 })
