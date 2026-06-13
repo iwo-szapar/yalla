@@ -48,9 +48,10 @@ cat <<'DONE'
 Yalla installed.
 
 Next steps:
-  1. Edit .claude/YALLA.md  — set base_branch, commands, and your project's gotchas.
-  2. Authenticate GitHub:    gh auth login
-  3. In Claude Code, run:    /yalla build the thing you want
+  1. In Claude Code, run:    /onboard
+  2. Edit .claude/YALLA.md  — set commands, tracking mode, and gotchas.
+  3. Re-run:                /onboard
+  4. Then run:              /yalla build the thing you want
 
 See SETUP.md and CUSTOMIZING.md for details.
 DONE

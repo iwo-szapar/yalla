@@ -190,6 +190,7 @@ That's the whole adaptation. No code changes. See [`CUSTOMIZING.md`](CUSTOMIZING
 
 ```
 /yalla <what to build>          full adaptive pipeline, single-agent build
+/onboard                        guided setup + HTML readiness dashboard
 /yalla-team <what to build>     full multi-agent team (heavier, for complex work)
 /yalla-plan <what to build>     just the adversarial plan
 /yalla-review                   binary pass/fail review of the current diff

@@ -38,12 +38,15 @@ Recommended before autopilot:
 Executable checks:
 
 ```bash
+npm run yalla:onboard -- dashboard --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
 ```
 
 Only `--apply` mutates labels or writes the issue template. Dry-run commands only report what would happen.
+
+Inside Claude Code, use `/onboard` for the guided version. It runs the checks and opens or points you to `.pipeline/yalla-onboarding-dashboard.html`.
 
 ## Config Checklist
 
