@@ -164,6 +164,8 @@ your-project/.claude/
 
 The installer copies only the engine (`skills/`, `agents/`, `knowledge/yalla/`) and seeds `YALLA.md`. The eval harness stays at the repo root — it's not part of your `.claude/`.
 
+For a first-time repository setup, follow [`docs/onboarding/`](docs/onboarding/) after install. It covers the project config, GitHub labels, task template, eval fixtures, and autopilot readiness path.
+
 ## Configure
 
 Open `.claude/YALLA.md` and set five things:
@@ -195,6 +197,7 @@ Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`). If `gh` is 
 - **Agents** (`agents/`) — the specialists: lead (orchestrator), implementer, tester, reviewer.
 - **Knowledge** (`knowledge/yalla/`) — pipeline mechanics (classification, diagnosis, vertical slices, test seams, artifacts, agent brief, preflight) plus the customizable check definitions in `REVIEW-CHECKS.md` and `PROJECT-CHECKS.md`.
 - **Eval harness** (`eval/yalla/`) — the runnable proof-contract / test-inventory / outcome-quality suites and their fixtures. Repo-root only.
+- **Onboarding docs** (`docs/onboarding/`) — what each repo needs: config, labels, issue shape, project checks, and eval fixtures.
 - **Autopilot docs** (`docs/autopilot/`) — staged scheduler/readiness guidance for moving from local dry-run to PR-only automation.
 
 ## A real-world example

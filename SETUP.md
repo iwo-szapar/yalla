@@ -62,6 +62,8 @@ your-project/.claude/
 
 The installer never overwrites an existing `.claude/YALLA.md`, so re-running it to pick up engine updates is safe.
 
+For a new repository, use [`docs/onboarding/README.md`](docs/onboarding/README.md) after install. It is the end-to-end checklist for config, labels, task templates, project checks, evals, and autopilot readiness.
+
 ## First-run config
 
 Open `.claude/YALLA.md` and set five things. Everything else has sane defaults.
@@ -73,6 +75,8 @@ Open `.claude/YALLA.md` and set five things. Everything else has sane defaults.
 5. **risk_gates** — which subsystem checks to arm (payments, migrations, async, auth, …). Only the ones that match your stack.
 
 That's the whole adaptation. No code changes. The deeper "how do I fit this to my project" guidance lives in [CUSTOMIZING.md](CUSTOMIZING.md).
+
+If you use GitHub tracking, also create the labels and issue template from [`docs/onboarding/task-system.md`](docs/onboarding/task-system.md) before trying queue dry-run or scheduled automation.
 
 ## Your first task
 
