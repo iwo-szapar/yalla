@@ -131,8 +131,28 @@ commands:
     expect(existsSync(result.dashboardPath ?? '')).toBe(true)
     const html = readFileSync(result.dashboardPath ?? '', 'utf8')
     expect(html).toContain('Yalla Onboarding')
+    expect(html).toContain('Required Before First /yalla')
+    expect(html).toContain('Required Before Autopilot')
+    expect(html).toContain('open ')
     expect(html).toContain('Missing labels')
     expect(html).toContain('gh label create yalla-ready')
+  })
+
+  it('init behaves as the one-command dashboard path', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root)
+    const result = await runYallaOnboard({
+      command: 'init',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: JSON.stringify([]), stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.dashboardPath).toBe(join(root, '.pipeline/yalla-onboarding-dashboard.html'))
+    expect(existsSync(result.dashboardPath ?? '')).toBe(true)
   })
 
   it('dashboard skips missing label card for file-only tracking', async () => {

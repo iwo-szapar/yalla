@@ -29,7 +29,7 @@ If it points to a directory, use `<directory>/.claude/YALLA.md`.
 2. If `.claude/YALLA.md` is missing, explain that Yalla must be installed first and offer the exact `install.sh` command if this is a cloned Yalla repo.
 3. Run the onboarding dashboard command when available:
    ```bash
-   npm run yalla:onboard -- dashboard --config <path-to-target>/.claude/YALLA.md
+   npm run yalla:onboard -- init --config <path-to-target>/.claude/YALLA.md
    ```
 4. If the command is unavailable because this is a plugin-only install, perform the same checks manually and write `.pipeline/yalla-onboarding-dashboard.html` yourself using the dashboard structure below.
 5. Report the dashboard path and the top 3 remaining actions.

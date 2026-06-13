@@ -1,6 +1,6 @@
 {
   "name": "yalla",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Yalla autonomous-coding eval harness, onboarding dashboard, and autopilot for Claude Code (standalone, open-source).",

@@ -170,6 +170,7 @@ You can also run the executable onboarding check from the Yalla repo:
 
 ```bash
 npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:onboard -- init --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
 ```

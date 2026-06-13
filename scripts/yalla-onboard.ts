@@ -26,7 +26,7 @@ type Check = {
 }
 
 type OnboardOptions = {
-  command: 'check' | 'labels' | 'template' | 'dashboard'
+  command: 'check' | 'labels' | 'template' | 'dashboard' | 'init'
   rootDir?: string
   configPath?: string
   dryRun?: boolean
@@ -56,8 +56,8 @@ export type OnboardResult = {
 
 function parseArgs(argv: string[]): OnboardOptions {
   const command = argv[0]
-  if (command !== 'check' && command !== 'labels' && command !== 'template' && command !== 'dashboard') {
-    throw new Error('Usage: tsx scripts/yalla-onboard.ts check|labels|template|dashboard [--config path] [--dry-run|--apply]')
+  if (command !== 'check' && command !== 'labels' && command !== 'template' && command !== 'dashboard' && command !== 'init') {
+    throw new Error('Usage: tsx scripts/yalla-onboard.ts check|labels|template|dashboard|init [--config path] [--dry-run|--apply]')
   }
 
   let configPath: string | undefined
@@ -90,7 +90,7 @@ export async function runYallaOnboard(options: OnboardOptions): Promise<OnboardR
   const targetRoot = loadedConfig.rootDir
   if (options.command === 'check') return runCheck(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner)
   if (options.command === 'labels') return runLabels(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner, Boolean(options.apply))
-  if (options.command === 'dashboard') return runDashboard(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner)
+  if (options.command === 'dashboard' || options.command === 'init') return runDashboard(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner)
   return runTemplate(targetRoot, loadedConfig, Boolean(options.apply))
 }
 
@@ -230,6 +230,9 @@ function renderDashboard(rootDir: string, loadedConfig: LoadedYallaConfig, check
   const missingLabels = labelsResult.missingLabels ?? []
   const commands = labelsResult.commands ?? []
   const templateTarget = templateResult.templateTarget ? relative(rootDir, templateResult.templateTarget) || templateResult.templateTarget : 'not resolved'
+  const openCommand = `open ${resolve(rootDir, '.pipeline/yalla-onboarding-dashboard.html')}`
+  const beforeYalla = checks.filter(check => ['config', 'base_branch', 'tracking_mode', 'commands.test', 'test_dir'].includes(check.name))
+  const beforeAutopilot = checks.filter(check => ['github_auth', 'github_labels', 'autopilot_default'].includes(check.name))
 
   return `<!doctype html>
 <html lang="en">
@@ -268,6 +271,7 @@ function renderDashboard(rootDir: string, loadedConfig: LoadedYallaConfig, check
     <div>
       <h1>Yalla Onboarding</h1>
       <p>Project readiness snapshot. Use this to see what is configured, what is missing, and what to do next.</p>
+      <pre>${escapeHtml(openCommand)}</pre>
     </div>
     <div class="meta">
       <span class="pill">Project: ${escapeHtml(loadedConfig.config.projectName || 'unknown')}</span>
@@ -285,10 +289,18 @@ function renderDashboard(rootDir: string, loadedConfig: LoadedYallaConfig, check
   </section>
 
   <section class="card" style="margin-top:28px">
-    <h2>Checklist</h2>
-    <table><thead><tr><th>Item</th><th>Status</th><th>Detail</th></tr></thead><tbody>
-      ${checks.map(check => `<tr><td>${escapeHtml(check.name)}</td><td class="status ${check.status}">${check.status}</td><td>${escapeHtml(check.detail)}</td></tr>`).join('')}
-    </tbody></table>
+    <h2>Required Before First /yalla</h2>
+    ${renderCheckTable(beforeYalla)}
+  </section>
+
+  <section class="card" style="margin-top:28px">
+    <h2>Required Before Autopilot</h2>
+    ${renderCheckTable(beforeAutopilot)}
+  </section>
+
+  <section class="card" style="margin-top:28px">
+    <h2>All Checks</h2>
+    ${renderCheckTable(checks)}
   </section>
 
   <section class="grid">
@@ -299,6 +311,7 @@ function renderDashboard(rootDir: string, loadedConfig: LoadedYallaConfig, check
     <div class="card">
       <h2>Issue Template</h2>
       <p>Target:</p><pre>${escapeHtml(templateTarget)}</pre>
+      <p>Dry-run:</p><pre>${escapeHtml(`npm run yalla:onboard -- template --dry-run --config ${loadedConfig.path ?? '.claude/YALLA.md'}`)}</pre>
       <p>Apply with:</p><pre>${escapeHtml(`npm run yalla:onboard -- template --apply --config ${loadedConfig.path ?? '.claude/YALLA.md'}`)}</pre>
     </div>
   </section>
@@ -311,6 +324,13 @@ function renderDashboard(rootDir: string, loadedConfig: LoadedYallaConfig, check
 </body>
 </html>
 `
+}
+
+function renderCheckTable(checks: Check[]) {
+  if (!checks.length) return '<p>No checks in this section.</p>'
+  return `<table><thead><tr><th>Item</th><th>Status</th><th>Detail</th></tr></thead><tbody>
+      ${checks.map(check => `<tr><td>${escapeHtml(check.name)}</td><td class="status ${check.status}">${check.status}</td><td>${escapeHtml(check.detail)}</td></tr>`).join('')}
+    </tbody></table>`
 }
 
 function nextStep(checks: Check[], missingLabels: string[], loadedConfig: LoadedYallaConfig) {

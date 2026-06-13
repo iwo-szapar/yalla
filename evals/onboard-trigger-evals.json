@@ -1,0 +1,35 @@
+{
+  "skill_name": "onboard",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "set up yalla in this repo and show me what's missing before I run it",
+      "expected_output": "Should trigger /onboard, run or describe onboarding checks, and produce an HTML dashboard path.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "make me a dashboard for yalla setup status in this project",
+      "expected_output": "Should trigger /onboard and focus on .pipeline/yalla-onboarding-dashboard.html.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "configure this repo for yalla, including labels and issue template",
+      "expected_output": "Should trigger /onboard and use dry-run labels/template guidance unless apply is explicitly requested.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "build a healthcheck endpoint that returns ok",
+      "expected_output": "Should not trigger /onboard; this is normal /yalla implementation work.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "run the yalla queue dry-run for the next eligible issue",
+      "expected_output": "Should not trigger /onboard; this is autopilot queue operation, not onboarding.",
+      "files": []
+    }
+  ]
+}
