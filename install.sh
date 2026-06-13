@@ -21,20 +21,22 @@ if [ ! -d "$DEST" ]; then
 fi
 
 echo "Installing Yalla into: $CLAUDE_DIR"
-mkdir -p "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla"
+mkdir -p "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla" "$CLAUDE_DIR/knowledge/product"
 
 cp -R "$SRC/skills/." "$CLAUDE_DIR/skills/"
 cp -R "$SRC/agents/." "$CLAUDE_DIR/agents/"
 cp -R "$SRC/knowledge/yalla/." "$CLAUDE_DIR/knowledge/yalla/"
+cp -R "$SRC/knowledge/product/." "$CLAUDE_DIR/knowledge/product/"
 
 # The engine files reference each other via ${CLAUDE_PLUGIN_ROOT}/... for plugin
 # installs. In vendored mode the files live in this repo's .claude/, so rewrite
 # those references to .claude/ paths. (.claude/YALLA.md is already correct.)
-find "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla" -name '*.md' -exec sed -i.bak \
+find "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla" "$CLAUDE_DIR/knowledge/product" -name '*.md' -exec sed -i.bak \
   -e 's|${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/|.claude/knowledge/yalla/|g' \
+  -e 's|${CLAUDE_PLUGIN_ROOT}/knowledge/product/|.claude/knowledge/product/|g' \
   -e 's|${CLAUDE_PLUGIN_ROOT}/agents/|.claude/agents/|g' \
   -e 's|${CLAUDE_PLUGIN_ROOT}/skills/|.claude/skills/|g' {} +
-find "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla" -name '*.md.bak' -delete
+find "$CLAUDE_DIR/skills" "$CLAUDE_DIR/agents" "$CLAUDE_DIR/knowledge/yalla" "$CLAUDE_DIR/knowledge/product" -name '*.md.bak' -delete
 
 if [ -f "$CLAUDE_DIR/YALLA.md" ]; then
   echo "Kept existing $CLAUDE_DIR/YALLA.md (not overwritten)."

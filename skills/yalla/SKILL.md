@@ -67,6 +67,8 @@ Read these on demand. They are the source of truth for the upgraded pipeline:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md` — durable issue contract
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md` — universal, risk-triggered, and architecture-doc alignment checks
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/MEMORY-PROTOCOL.md` — optional Phase 0b recall + Phase 5 save, only when `.claude/YALLA.md` sets a `memory:` block
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md` — conditional product-intent gate for product/GTM/user-flow changes
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` — review method for comparing documented intent to implementation evidence
 
 ## Imported Cursor Team-Kit Patterns
 
@@ -159,7 +161,10 @@ Classify the task before planning:
 8. Determine `architecture_doc_gate`:
    - `applies` if the task changes a route, auth flow, API endpoint, data model, or any behavior already described in your architecture docs (`docs/architecture/`).
    - `n/a` only with a short reason.
-9. Write `.pipeline/classification.json` and add the same fields to `.pipeline-state.json`.
+9. Determine `product_intent_gate`:
+   - `applies` if the task changes product behavior, user/admin/operator journeys, GTM/pricing/positioning surfaces, money, access, entitlements, delivery, onboarding, public product pages, generated artifacts, or agent workflows that decide what gets built.
+   - `n/a` for tiny hotfixes, isolated tests, dependency/config updates, mechanical refactors, or docs edits that do not define future product behavior. Include a specific reason.
+10. Write `.pipeline/classification.json` and add the same fields to `.pipeline-state.json`.
 
 ### Conditional routing
 
@@ -169,6 +174,7 @@ Classify the task before planning:
 - `logic-prototype` -> create a throwaway terminal/state prototype first, then plan production work after the model is validated.
 - `architecture` -> run an `architecture-depth` exploration before proposing implementation.
 - Ambiguous domain terms -> ask one precise question at a time before plan approval; update durable docs only when the decision is durable.
+- Product/GTM/user-flow ambiguity -> load `/product-intent` and record Product Intent before technical planning. Do not use Product Intent to expand scope; use it to narrow the MVP and name kill criteria.
 
 Do not silently downgrade a gate. If a required gate cannot run, record the blocker and ask the user to accept the risk or change scope.
 
@@ -241,7 +247,7 @@ git worktree add -b "session/issue-$ISSUE_NUMBER-$SLUG" ".claude/worktrees/issue
 
 If already in a Claude Code worktree flow, use the equivalent worktree-entry mechanism.
 
-State must include `issue_number`, `issue_url`, `branch`, `task_type`, `scope_mode`, `required_gates`, `phase_split_required`, `risk_tier`, `evidence_mode`, `architecture_doc_gate`, `architecture_doc_gate_reason`, `merge_policy`, and `phase: "1-plan"`. It must not introduce a parallel ID scheme outside `issue-###`.
+State must include `issue_number`, `issue_url`, `branch`, `task_type`, `scope_mode`, `required_gates`, `phase_split_required`, `risk_tier`, `evidence_mode`, `architecture_doc_gate`, `architecture_doc_gate_reason`, `product_intent_gate`, `product_intent_gate_reason`, `merge_policy`, and `phase: "1-plan"`. It must not introduce a parallel ID scheme outside `issue-###`.
 
 ---
 
@@ -281,6 +287,10 @@ Required before proceeding:
 ### Planning path
 
 For complex work, invoke `/yalla-plan`. For simple work, plan directly using the same required sections after reading the codebase.
+
+If `product_intent_gate: "applies"`, load `/product-intent` or read `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/product/ASSUMPTION-TESTING.md`, and `${CLAUDE_PLUGIN_ROOT}/knowledge/product/METRICS-FRAMEWORK.md` before writing the technical plan. The Product Intent section must name the target actor, desired outcome, metric moved, load-bearing assumptions, cheapest validation, kill criteria, MVP scope, and intended behavior. If GTM-facing, also read `${CLAUDE_PLUGIN_ROOT}/knowledge/product/GTM-DISCOVERY.md`.
+
+If Product Intent is `N/A`, record the specific reason in the plan. Do not force product discovery onto tiny fixes.
 
 Before the implementation plan, write `plans/active/issue-###-[slug]-research.md` when the task is non-trivial: multiple domains, prior implementation reuse, external API/library uncertainty, UI/product ambiguity, or more than one phase PR. Keep it high signal:
 
@@ -348,6 +358,27 @@ Plan structure:
 - Required doc updates: [paths or `none`]
 - Test/review proof: [how tests and review will prove code and docs stayed aligned]
 
+## Product Intent
+- Applies: [true|false]
+- Trigger: [why it applies, or N/A reason]
+- Target actor: [user|buyer|customer|admin|operator|agent|reviewer]
+- Desired outcome: [what becomes easier/safer/faster/more likely]
+- Metric moved: [primary metric or proxy]
+- Opportunity/problem: [customer pain, workflow bottleneck, strategic constraint, or risk]
+- Current evidence: [data, incident, user report, support signal, sales signal, or explicit lack of evidence]
+- MVP scope: [smallest user-testable implementation]
+- Non-goals: [scope boundaries]
+
+### Load-Bearing Assumptions
+1. **Claim:** [claim that would kill or change the plan if false]
+   - Fails if: [falsifiable condition]
+   - Evidence to get this week: [specific query, call, prototype, or shipped slice]
+   - Cheapest test: [smallest confidence-changing test]
+   - Kill criterion: [threshold to stop, narrow, or pivot]
+
+### Intended Behavior
+- [Behavior, rule, promise, or boundary implementation must preserve]
+
 ## Research Summary
 - Research artifact: [`plans/active/issue-###-[slug]-research.md` or `N/A` with reason]
 - Existing patterns checked: [paths]
@@ -396,6 +427,7 @@ Acceptance criteria:
 - schema-migration-check: [applies/N/A and why]
 - identity-routing-check: [applies/N/A and why]
 - payment-integrity-check: [applies/N/A and why]
+- intended-vs-implemented-check: [applies/N/A and why]
 - email-delivery-check: [applies/N/A and why]
 - generated-artifact-check: [applies/N/A and why]
 - ui-journey-check: [applies/N/A and why]
@@ -428,6 +460,7 @@ Acceptance criteria:
 
 ## Artifact Manifest
 - `.pipeline/architecture-alignment.json`
+- `.pipeline/product-intent.json`
 - `.pipeline/acceptance-trace.json`
 - `.pipeline/progress.md`
 - `.pipeline/intent-brief.md`
@@ -447,8 +480,9 @@ After user approval:
 
 1. Update the GitHub issue body/comment with the Agent Brief from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`.
 2. Persist the approved plan path in `.pipeline-state.json`.
-3. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`, its proof mode, deterministic-seam decision, and evidence target.
-4. Initialize `.pipeline/progress.md` with planned slices, accepted risks, and the next handoff note when the work is more than a tiny hotfix.
+3. If Product Intent applies and the intent is non-obvious or review-relevant, initialize `.pipeline/product-intent.json` with the Product Intent fields and intended behavior claims.
+4. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`, its proof mode, deterministic-seam decision, and evidence target.
+5. Initialize `.pipeline/progress.md` with planned slices, accepted risks, and the next handoff note when the work is more than a tiny hotfix.
 
 ---
 
@@ -526,6 +560,7 @@ Before fresh-context review, write `.pipeline/intent-brief.md` when the diff is 
 - Reviewer entry points and files not worth reviewing line-by-line.
 - Validation evidence already collected.
 - Open decisions or product implications that require human judgment.
+- Product Intent summary and intended behavior claims when the product-intent gate applies.
 
 Before binary review, run a hostile self-critique and write `.pipeline/but-for-real.md`:
 
@@ -551,6 +586,7 @@ Run binary pass/fail checks. Universal checks stay small:
 - **evidence-check:** Do build/typecheck/test/smoke/claim-verification artifacts prove the stated behavior, and are `INCONCLUSIVE` results handled as risks instead of success?
 - **reviewability-check:** Can a reviewer understand the intent, risky files, generated/mechanical changes, and test evidence from the PR body and artifacts without reconstructing the run?
 - **documentation-impact-check:** Did the change affect docs, runbooks, examples, generated templates, API references, or architecture claims? If yes, were they updated? If no, is the no-impact reason credible?
+- **intended-vs-implemented-check:** When Product Intent applies, does implementation evidence enforce the documented intent across every touched money, access, data, privacy, delivery, trust, or product-promise boundary?
 
 For structural changes:
 
@@ -567,6 +603,7 @@ Risk-triggered checks:
 - **schema-migration-check:** Do migrations, templates, writers, and schema docs stay coupled for both new and existing environments?
 - **identity-routing-check:** Does auth/OAuth/invite code bind the right identity, classify roles correctly, and avoid orphan or broken-link states?
 - **payment-integrity-check:** Do checkout, webhook, entitlement, coupon, invoice, and fee paths preserve money and access invariants?
+- **intended-vs-implemented-check:** Does the implementation match the Product Intent, plan, architecture docs, and PR promises on the real code paths? If it differs, is the intent updated or the mismatch fixed?
 - **email-delivery-check:** If an email carries the user's only token/link/instruction, is it treated as critical infrastructure with render tests, logging, retry, and recovery?
 - **generated-artifact-check:** Do generated repos/templates contain no unresolved placeholders, missing manifest files, citation/markup tags, object-string leaks, or inaccessible delivery links?
 - **ui-journey-check:** Can a user complete and recover from the changed form/journey on desktop and mobile, including the likely failure path?
@@ -623,11 +660,13 @@ Categorize root causes:
 - Testing blind spot
 - Tooling issue
 - Artifact drift
+- Product intent drift
 
 Route durable learnings to the smallest lasting home:
 
 - Your conventions doc (CLAUDE.md / AGENTS.md) only for global repo rules future agents must know before coding.
 - `.claude/YALLA.md` for pipeline-specific defaults, gotchas, or domain mapping.
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/*` for reusable product-intent, assumption-testing, GTM, metrics, or intended-vs-implemented guidance.
 - `docs/learnings/YYYY-MM-DD-[topic].md` for incident/process-specific directives.
 - `.pipeline/progress.md` only for ephemeral handoff context that should not persist after the PR.
 
@@ -655,9 +694,10 @@ Before committing or opening/updating the PR:
 3. Call out risky behavior changes, rollout concerns, smoke/verification evidence, and accepted risks.
 4. Include a risk tier (`low`, `medium`, `high`) and why.
 5. Include documentation impact status and validation artifacts or links.
-6. If updating an existing PR, fetch review and discussion comments, group blocking feedback first, and address or explicitly respond to each blocker.
-7. Do not rewrite history, force-push, or clean commits unless the user explicitly approves that separate action.
-8. Read `.pipeline/outcome-evaluation.json`. If verdict is not `PROVEN`, PR copy must say `human review needed` or `not proven`; do not use completion language.
+6. If Product Intent applies, include the outcome, metric/proxy, MVP scope, intended-vs-implemented verdict, and any accepted product assumption risk.
+7. If updating an existing PR, fetch review and discussion comments, group blocking feedback first, and address or explicitly respond to each blocker.
+8. Do not rewrite history, force-push, or clean commits unless the user explicitly approves that separate action.
+9. Read `.pipeline/outcome-evaluation.json`. If verdict is not `PROVEN`, PR copy must say `human review needed` or `not proven`; do not use completion language.
 
 ---
 
@@ -701,6 +741,12 @@ Decision needed from the operator/maintainer:
 ## Risk Tier
 [low|medium|high] - [why]
 
+## Product Intent
+- Applies: [true|false and why]
+- Outcome/metric: [desired outcome + metric/proxy]
+- MVP scope: [smallest shipped slice]
+- Intended-vs-implemented: [Pass/N/A/accepted risk]
+
 ## Reviewer Entry Points
 - [files/flows worth human attention]
 
@@ -719,6 +765,7 @@ Decision needed from the operator/maintainer:
 - [x] security-check: Pass
 - [x] complexity-check: Pass
 - [x] operator-understanding-check: Pass
+- [x] intended-vs-implemented-check: Pass [or N/A with reason]
 - [x] success-invariant-check: Pass
 - [x] behavior tests passing through public seams
 - [x] test-quality-check: Pass
@@ -787,8 +834,10 @@ Merge only if `.pipeline-state.json` has `merge_policy: "auto-merge-approved"` f
 - Treating `gh run list` as the complete PR status instead of `gh pr checks`.
 - Claiming a fix is verified without a falsifiable claim and evidence.
 - Shipping a PR whose body does not explain review entry points, risks, and test evidence.
+- Shipping product/GTM/user-flow work without a Product Intent section or a specific N/A reason.
+- Treating intended-vs-implemented-check as generic doc alignment instead of comparing documented intent to real implementation evidence.
 - Shipping without a documentation impact scan when public behavior, APIs, runbooks, generated artifacts, or UI copy changed.
 - Asking the user to review a broad diff without an intent brief, risk tier, and validation artifacts.
 - Letting conflict resolution become a refactor.
-- Reviewing your own code (creator != reviewer), including reviewing a refactor you just did during the review phase.
+- Reviewing your own code (author != reviewer), including reviewing a refactor you just did during the review phase.
 - Prefixing a parameter with `_` to suppress unused-var lint instead of removing it.

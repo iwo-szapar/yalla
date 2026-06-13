@@ -37,6 +37,9 @@ Before spawning agents, read:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md`
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/ASSUMPTION-TESTING.md`
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md`
 - Your project's conventions doc (CLAUDE.md / AGENTS.md)
 - Relevant docs/decisions and docs/architecture files for the task area
 
@@ -50,8 +53,8 @@ TeamCreate: team_name = "yalla-plan-issue-###"
 |----------|------|-----|
 | codebase-analyst | general-purpose (sonnet) | Read `.claude/YALLA.md`, your conventions doc (CLAUDE.md / AGENTS.md), `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`, relevant docs/decisions, relevant architecture docs, affected files, and relevant `docs/incidents` / `docs/learnings` entries. Report domain terms, interfaces, seams, schemas, conventions, prior incident failure modes, and any code/doc drift. Do NOT propose solutions. |
 | solution-architect | general-purpose (sonnet) | Design technical approach using deep modules and real seams. Research via WebSearch/context7. Propose interfaces, data flow, dependency strategy, vertical slices, and which architecture docs must change or stay unchanged. |
-| spec-validator | general-purpose (sonnet) | Walk through as end-user. Define the success invariant, map happy, error, abuse, and edge paths, identify the most likely negative-path test, and convert behavior into testable acceptance criteria, highest correct test seams, and architecture-doc claims that need test evidence. For features that grant access, move money, or bind identity: required to map the abuse path explicitly AND state whether a human-review gate is needed (default: yes for security-sensitive grants). |
-| red-team | general-purpose (sonnet) | Challenge every assumption. Find security holes, performance issues, shallow modules, fake seams, missing repro loops, over-engineering, and PRD/code/docs mismatches. Be specific — "X will fail when Y because Z", not "this might not work". |
+| spec-validator | general-purpose (sonnet) | Walk through as end-user. Define the success invariant, map happy, error, abuse, and edge paths, identify the most likely negative-path test, and convert behavior into testable acceptance criteria, highest correct test seams, and architecture-doc claims that need test evidence. When Product Intent applies, define the intended user/business outcome, metric/proxy, MVP boundary, and intended-vs-implemented proof needed. For features that grant access, move money, or bind identity: required to map the abuse path explicitly AND state whether a human-review gate is needed (default: yes for security-sensitive grants). |
+| red-team | general-purpose (sonnet) | Challenge every assumption. Find security holes, performance issues, shallow modules, fake seams, missing repro loops, over-engineering, PRD/code/docs mismatches, and untested product assumptions. Be specific — "X will fail when Y because Z", not "this might not work". |
 
 Read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEAMMATE-PROMPTS.md` for exact spawn prompts.
 
@@ -80,6 +83,7 @@ Write to `plans/active/issue-###-[slug].md`, plus `plans/active/issue-###.plan.j
 - Phase split required: [true|false and why]
 - Risk tier: [low|medium|high]
 - Evidence mode: [minimal|standard|strict]
+- Product intent gate: [applies|n/a and why]
 
 ## Domain Language
 - [Canonical project terms from your conventions doc (CLAUDE.md / AGENTS.md), .claude/YALLA.md, docs]
@@ -112,6 +116,16 @@ Write to `plans/active/issue-###-[slug].md`, plus `plans/active/issue-###.plan.j
 ## Success Invariant
 [From spec-validator — what must be true before the workflow can be marked successful]
 
+## Product Intent
+- Applies: [true/false and why]
+- Intended outcome: [user/business outcome, not implementation output]
+- Target user/context: [who this helps and when]
+- Metric/proxy: [how we know it worked]
+- MVP boundary: [smallest shipped slice that preserves the intent]
+- Top kill-assumptions:
+  - [assumption] — [cheapest validation/proof]
+- Intended-vs-implemented proof: [tests/evidence/review checks that prove code matches intent]
+
 ## Incident Regression Map
 - Related incidents/learnings: [paths, or "none found"]
 - Failure modes this PR must not repeat
@@ -124,6 +138,7 @@ Write to `plans/active/issue-###-[slug].md`, plus `plans/active/issue-###.plan.j
 - schema-migration-check: [applies/N/A and why]
 - identity-routing-check: [applies/N/A and why]
 - payment-integrity-check: [applies/N/A and why]
+- intended-vs-implemented-check: [applies/N/A and why]
 - email-delivery-check: [applies/N/A and why]
 - generated-artifact-check: [applies/N/A and why]
 - ui-journey-check: [applies/N/A and why]
@@ -175,6 +190,7 @@ Files likely affected:
 ## Artifact Manifest
 - `plans/active/issue-###.plan.json`
 - `.pipeline/architecture-alignment.json`
+- `.pipeline/product-intent.json`
 - `.pipeline/acceptance-trace.json`
 - `.pipeline/test-evidence.json`
 - `.pipeline/review-results.json`

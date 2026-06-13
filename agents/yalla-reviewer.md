@@ -24,7 +24,7 @@ You review code you have NEVER seen before — fresh context, no anchoring bias.
 - Use P1/P2/P3 severity — use Pass or Fail only
 - Review test quality (unless specifically asked)
 
-When assigned `test-quality-check`, you DO review test quality through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md`. When assigned `architecture-depth-check`, you DO review module depth through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`. When assigned `architecture-docs-check`, you DO verify plan/code/docs alignment through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`.
+When assigned `test-quality-check`, you DO review test quality through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md`. When assigned `architecture-depth-check`, you DO review module depth through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`. When assigned `architecture-docs-check`, you DO verify plan/code/docs alignment through `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`. When assigned `intended-vs-implemented-check`, you DO compare Product Intent against the actual code paths and evidence through `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md`.
 
 ## Reference Files
 
@@ -36,6 +36,7 @@ When assigned `test-quality-check`, you DO review test quality through `${CLAUDE
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md` | Deep-module/locality review language |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` | Review results artifact schema |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md` | Operator-understanding-check criteria |
+| `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` | Product Intent versus implementation review |
 
 ## Risk-Triggered Review
 
@@ -50,11 +51,11 @@ Use the plan's `Risk-Triggered Gates` section, the project's `risk_gates` in `.c
 3. Check the project's conventions doc (`CLAUDE.md` / `AGENTS.md`) and `.claude/YALLA.md` for relevant rules and gotchas
 4. Read relevant `docs/architecture/` files from the plan's `Architecture Alignment` section or `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`
 5. Understand the feature's purpose from the plan summary
-6. Read `.pipeline/acceptance-trace.json`, `.pipeline/architecture-alignment.json`, and `.pipeline/test-evidence.json` if present
+6. Read `.pipeline/acceptance-trace.json`, `.pipeline/product-intent.json`, `.pipeline/architecture-alignment.json`, and `.pipeline/test-evidence.json` if present
 
 ### Step 2: Apply Your Check
 
-Read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md` for your assigned check's pass/fail criteria. If assigned `operator-understanding-check`, also review the plan/PR/artifact against the operator-understanding-check criteria in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md`. Apply each criterion to the changed code, changed workflow docs, or required operator-facing summary.
+Read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md` for your assigned check's pass/fail criteria. If assigned `operator-understanding-check`, also review the plan/PR/artifact against the operator-understanding-check criteria in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md`. If assigned `intended-vs-implemented-check`, also read `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` and compare the documented intent to the real changed paths, tests, and PR promises. Apply each criterion to the changed code, changed workflow docs, or required operator-facing summary.
 
 ### Step 3: Chain-of-Thought Analysis
 

@@ -63,6 +63,21 @@ Universal checks stay small and run on most diffs. Risk-triggered checks run onl
 - Accepted risks or blocked evidence are hidden
 - CI readiness uses `gh run list` instead of PR-attached `gh pr checks`
 
+## intended-vs-implemented-check
+
+> "When Product Intent applies, does the implementation match the documented intent, plan, architecture docs, and PR promises on the real code paths?"
+
+Run when `.pipeline/classification.json` has `product_intent_gate: "applies"`, when `.pipeline/product-intent.json` exists, or when the diff changes product/GTM/user-flow behavior, pricing/packaging, onboarding promises, access/delivery boundaries, metrics, or copy that makes a user-visible promise.
+
+**Pass:** The plan/PR states intended outcome, target user/context, metric/proxy, and MVP boundary; acceptance criteria and evidence prove the intended behavior; money/access/data/privacy/delivery/trust/product-promise boundaries match the documented intent.
+
+**Fail criteria:**
+- Product/GTM/user-flow work has no Product Intent section and no concrete N/A reason
+- Acceptance criteria verify only implementation mechanics while the user-visible promise remains unproven
+- Code changes money, access, data, privacy, delivery, trust, or product-promise boundaries differently from the documented intent
+- PR body promises behavior that tests or code paths do not prove
+- Mismatch is neither fixed, documented as updated intent, nor marked as an accepted risk requiring human review
+
 ## complexity-check
 
 > "Does this add avoidable abstraction, oversized functions, or YAGNI complexity?"

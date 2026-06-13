@@ -29,7 +29,7 @@ git diff "$BASE_BRANCH" --name-only
 git diff "$BASE_BRANCH"
 ```
 
-Also read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`, and `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md` before launching reviewers.
+Also read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`, `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md`, and `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` before launching reviewers.
 
 ## Step 2: Launch Reviewers
 
@@ -190,6 +190,20 @@ Specifics to check:
 - Webhook idempotency row is inserted only after required handlers succeed.
 - Paid access is granted exactly once and cannot be orphaned from purchase/customer records.
 
+### Run for product intent / product promise changes:
+
+Trigger when `.pipeline/classification.json` has `product_intent_gate: "applies"`, when `.pipeline/product-intent.json` exists, or when the diff changes product/GTM/user-flow behavior, pricing/packaging, onboarding promises, access/delivery boundaries, metrics, or copy that makes a user-visible promise.
+
+**intended-vs-implemented-check:**
+> "Does the implementation match the documented Product Intent, plan, architecture docs, and PR promises on the real code paths?"
+
+Specifics to check:
+- The intended outcome, target user/context, MVP boundary, and metric/proxy are present in the plan or PR body when the gate applies.
+- Acceptance criteria and tests cover the intended behavior, not only implementation details.
+- Money, access, data, privacy, delivery, trust, and product-promise boundaries match the documented intent.
+- Any mismatch is fixed, the intent is explicitly updated, or the PR marks it as an accepted risk requiring human review.
+- N/A is only valid with a concrete reason, not because the change is "small" while it still alters a product promise.
+
 ### Run for async / external side-effect changes:
 
 Trigger when the diff touches background jobs, webhooks, cron handlers, queue publishing, email sending, version-control API calls, infrastructure management API calls, or long-running generation phases.
@@ -338,7 +352,7 @@ Runs against the current branch's diff from `$BASE_BRANCH`. Reports results. Doe
 - Holistic review ("rate the overall quality") instead of specific binary checks
 - Flagging issues the agent wouldn't know are wrong without reading the codebase
 - Using P1/P2/P3 severity instead of binary pass/fail
-- Reviewing code you wrote yourself (creator != reviewer)
+- Reviewing code you wrote yourself (author != reviewer)
 - Reviewing before tests pass (fixes during review may break tests)
 - Suggesting improvements beyond the scope of the current change
 - Prefixing a parameter with `_` to suppress unused-var lint instead of removing it — the lint rule exists to catch dead code, not to be silenced
@@ -349,3 +363,4 @@ Runs against the current branch's diff from `$BASE_BRANCH`. Reports results. Doe
 - Marking `INCONCLUSIVE` verification as success
 - Approving a PR that cannot be reviewed from its body, artifacts, and changed-file entry points
 - Using GitHub Actions-only status commands when PR-attached checks require `gh pr checks`
+- Treating intended-vs-implemented-check as generic doc alignment instead of comparing the documented intent to real code paths and evidence

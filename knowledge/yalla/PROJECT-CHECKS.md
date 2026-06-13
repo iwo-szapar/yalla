@@ -33,6 +33,13 @@ Run a section only when the touched files or workflow match its trigger. A docs-
 - [ ] Code cannot mark `completed`, `delivered`, `sent`, or equivalent before required side effects succeed
 - [ ] Recoverable failures persist actionable details for user/admin recovery
 
+### Product Intent (product/GTM/user-flow promises)
+- [ ] Plan or PR states the intended outcome, target user/context, metric/proxy, and MVP boundary
+- [ ] Top kill-assumptions have cheap validation or are accepted risks
+- [ ] Acceptance criteria prove the intended behavior, not only implementation details
+- [ ] `.pipeline/product-intent.json` exists when the intent is non-obvious or review-relevant
+- [ ] `intended-vs-implemented-check` is run and its verdict appears in review evidence
+
 ### Async Reliability (jobs, webhooks, cron, external APIs)
 - [ ] Retry taxonomy is explicit: retry `429/5xx/network`, do not retry normal `4xx`
 - [ ] Create operations are idempotent via key, unique constraint, or list-before-create guard
