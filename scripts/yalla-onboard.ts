@@ -86,9 +86,10 @@ async function defaultCommandRunner(command: string, args: string[]): Promise<Co
 export async function runYallaOnboard(options: OnboardOptions): Promise<OnboardResult> {
   const rootDir = options.rootDir ?? process.cwd()
   const loadedConfig = loadYallaConfig({ rootDir, configPath: options.configPath })
-  if (options.command === 'check') return runCheck(rootDir, loadedConfig, options.commandRunner ?? defaultCommandRunner)
-  if (options.command === 'labels') return runLabels(rootDir, loadedConfig, options.commandRunner ?? defaultCommandRunner, Boolean(options.apply))
-  return runTemplate(rootDir, loadedConfig, Boolean(options.apply))
+  const targetRoot = loadedConfig.rootDir
+  if (options.command === 'check') return runCheck(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner)
+  if (options.command === 'labels') return runLabels(targetRoot, loadedConfig, options.commandRunner ?? defaultCommandRunner, Boolean(options.apply))
+  return runTemplate(targetRoot, loadedConfig, Boolean(options.apply))
 }
 
 async function runCheck(rootDir: string, loadedConfig: LoadedYallaConfig, commandRunner: CommandRunner): Promise<OnboardResult> {
@@ -107,9 +108,11 @@ async function runCheck(rootDir: string, loadedConfig: LoadedYallaConfig, comman
   const auth = await commandRunner('gh', ['auth', 'status'])
   checks.push({ name: 'github_auth', status: auth.exitCode === 0 ? 'pass' : 'warn', detail: auth.exitCode === 0 ? 'gh authenticated' : 'gh unavailable or unauthenticated; file-only fallback expected' })
 
-  if (auth.exitCode === 0) {
+  if (auth.exitCode === 0 && (config.trackingMode ?? 'github') === 'github') {
     const labels = await missingLabels(commandRunner, requiredLabels(loadedConfig), config.repo)
     checks.push({ name: 'github_labels', status: labels.length ? 'warn' : 'pass', detail: labels.length ? `Missing labels: ${labels.join(', ')}` : 'Required labels exist' })
+  } else if ((config.trackingMode ?? 'github') !== 'github') {
+    checks.push({ name: 'github_labels', status: 'pass', detail: `Skipped for tracking_mode=${config.trackingMode}` })
   }
 
   const hasFailure = checks.some(check => check.status === 'fail')
