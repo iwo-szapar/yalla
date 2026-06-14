@@ -11,6 +11,7 @@ Required:
 - GitHub CLI authenticated if you want issue/PR tracking: `gh auth status`.
 - `.claude/YALLA.md` copied from `YALLA.example.md` and edited for your repo.
 - Working project commands for install, test, typecheck, build, and lint, or explicit `""` values for gates you do not have.
+- Optional model routing hints for classify, plan, implement, test, review, and summarize.
 - Test layout fields so the tester knows where tests belong.
 - At least three project gotchas that a new contributor would otherwise miss.
 - A small set of risk gates that match subsystems your repo actually has.
@@ -43,6 +44,7 @@ npm run yalla:onboard -- init --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- check --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- doctor --config /path/to/your-project/.claude/YALLA.md
 ```
 
 Only `--apply` mutates labels or writes the issue template. Dry-run commands only report what would happen.
@@ -60,6 +62,7 @@ Open `.claude/YALLA.md` and fill these sections in this order:
 - `commands.install` - exact dependency install command, or `""` if none.
 - `commands.test` - exact test command. Do not guess. If this is wrong, most runs become `INCONCLUSIVE`.
 - `commands.typecheck`, `commands.build`, `commands.lint` - exact commands or `""`.
+- `models` - optional phase-level routing hints. Valid keys are `classify`, `plan`, `implement`, `test`, `review`, and `summarize`.
 - `test_dir`, `test_file_glob`, `test_setup_file` - match existing conventions.
 - `tracking_mode` - use `github` unless you intentionally need `file-only` or `db`.
 - `domains` - map your team's words to subsystems. Use words that appear in issue titles.
@@ -81,6 +84,14 @@ commands:
   typecheck: "npm run typecheck"
   build: "npm run build"
   lint: "npm run lint"
+
+models:
+  classify: "cheap"
+  plan: "sonnet"
+  implement: "sonnet"
+  test: "sonnet"
+  review: "opus"
+  summarize: "cheap"
 
 test_dir: tests/
 test_file_glob: "**/*.test.*"
@@ -142,5 +153,7 @@ Your repo is onboarded when:
 - The verdict is understood: `PROVEN`, `NOT_PROVEN`, or `INCONCLUSIVE`.
 - Review checks point to your real project rules, not just generic examples.
 - A second run can reuse the same config without you restating repo conventions.
+
+For operator visibility, a healthy manual run also has `.pipeline/events.jsonl`, `.pipeline/latest-checkpoint.json`, and `.pipeline/report.html`. Generate or inspect these from the cloned Yalla repo with `npm run yalla:run -- status|report|export --config /path/to/your-project/.claude/YALLA.md`.
 
 Autopilot is onboarded separately. Do not treat a successful manual `/yalla` run as permission for scheduled automation.

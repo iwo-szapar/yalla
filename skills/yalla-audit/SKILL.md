@@ -31,6 +31,8 @@ Also gather when present:
 - Plan file: `plans/active/issue-###-*`
 - Plan JSON: `plans/active/issue-###.plan.json`
 - Pipeline artifacts: `.pipeline/classification.json`, `.pipeline/diagnosis.json`, `.pipeline/acceptance-trace.json`, `.pipeline/test-evidence.json`, `.pipeline/review-results.json`, `.pipeline/ship-manifest.json`
+- Operator artifacts: `.pipeline/events.jsonl`, `.pipeline/latest-checkpoint.json`, `.pipeline/checkpoints/`, `.pipeline/report.html`
+- Export bundle: `.pipeline/export-*` when `npm run yalla:run -- export` was used for a portable audit snapshot
 - Git diff/stat from the PR or branch: `git log "$BASE_BRANCH"..session/issue-###-* --stat` if branch still exists
 - Learnings: `docs/learnings/` entries referencing `issue-###`
 
@@ -94,6 +96,7 @@ Record a finding only when a problem exists.
 ### Pipeline Hygiene
 
 - Was state resumable through `.pipeline-state.json`, issue comments, and PR evidence?
+- Was state resumable through `.pipeline/events.jsonl`, `.pipeline/latest-checkpoint.json`, issue comments, and PR evidence?
 - Were routine `.pipeline/*` artifacts kept local unless review-relevant?
 - Were branch/worktree/PR links clear?
 

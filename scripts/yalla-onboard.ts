@@ -55,6 +55,7 @@ const CANONICAL_RISK_GATES = new Set([
   'architecture-check',
   'architecture-docs-check',
   'architecture-depth-check',
+  'doc-alignment-check',
   'cross-platform-check',
   'voice-check',
   'async-reliability-check',
@@ -128,6 +129,7 @@ async function runCheck(rootDir: string, loadedConfig: LoadedYallaConfig, comman
   checks.push(commandCheck('commands.typecheck', config.commands.typecheck))
   checks.push(commandCheck('commands.build', config.commands.build))
   checks.push(commandCheck('commands.lint', config.commands.lint))
+  checks.push(modelRoutingCheck(config.models))
   checks.push({ name: 'test_dir', status: config.testDir && existsSync(resolve(rootDir, config.testDir)) ? 'pass' : 'warn', detail: config.testDir ?? 'Missing test_dir' })
   checks.push(riskGateCheck(config.riskGates.map(gate => gate.name).filter(Boolean)))
   checks.push({ name: 'autopilot_default', status: config.autopilot.enabled ? 'warn' : 'pass', detail: config.autopilot.enabled ? 'Autopilot enabled; confirm readiness checklist passed' : 'Autopilot disabled by default' })
@@ -163,6 +165,15 @@ function riskGateCheck(names: string[]): Check {
     }
   }
   return { name: 'risk_gates', status: 'pass', detail: `${names.length} canonical risk gate(s) configured` }
+}
+
+function modelRoutingCheck(models: Record<string, string>): Check {
+  const keys = Object.keys(models)
+  if (!keys.length) return { name: 'model_routing', status: 'warn', detail: 'No models block configured; default Claude Code model will be used for all phases' }
+  const allowed = new Set(['classify', 'plan', 'implement', 'test', 'review', 'summarize'])
+  const unknown = keys.filter(key => !allowed.has(key))
+  if (unknown.length) return { name: 'model_routing', status: 'fail', detail: `Unknown model route(s): ${unknown.join(', ')}` }
+  return { name: 'model_routing', status: 'pass', detail: keys.map(key => `${key}=${models[key]}`).join(', ') }
 }
 
 async function runLabels(_rootDir: string, loadedConfig: LoadedYallaConfig, commandRunner: CommandRunner, apply: boolean): Promise<OnboardResult> {

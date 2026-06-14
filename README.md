@@ -78,6 +78,8 @@ Yalla builds in **tracer-bullet vertical slices** — each slice is a thin slice
 A run leaves a trail under `.pipeline/` so a reviewer can decide where to look closely instead of re-reading everything:
 
 - `classification.json` — task type, risk tier, evidence mode, gates armed.
+- `events.jsonl` — append-only run timeline: phase starts, tool/command notes, human decisions, checkpoints, and ship events.
+- `checkpoints/` + `latest-checkpoint.json` — resumable save points after classify, plan, each work slice, test, review, and ship.
 - `acceptance-trace.json` — every criterion, its proof mode, and its evidence status.
 - `test-evidence.json` — commands run, pass/fail, falsifiable claim verdicts, smoke evidence.
 - `review-results.json` — each binary check and its verdict.
@@ -198,6 +200,21 @@ That's the whole adaptation. No code changes. See [`CUSTOMIZING.md`](CUSTOMIZING
 /yalla-audit <issue-### | PR#>  post-mortem on a completed run
 /yalla issue-123                resume an interrupted run
 ```
+
+Operator run-control helpers are also available from the cloned repo:
+
+```bash
+npm run yalla:run -- doctor
+npm run yalla:run -- event --event stage.started --phase plan --message "Planning started"
+npm run yalla:run -- checkpoint --phase test --message "Focused tests passed"
+npm run yalla:run -- status
+npm run yalla:run -- report
+npm run yalla:run -- resume
+npm run yalla:run -- rewind --target plan
+npm run yalla:run -- export
+```
+
+These commands are deliberately local and non-destructive. `resume` and `rewind` return the checkpoint and next action; they do not run destructive Git commands for you.
 
 Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`) for default GitHub tracking. If you intentionally want no GitHub issue/PR workflow, set `tracking_mode: file-only` in `.claude/YALLA.md`.
 

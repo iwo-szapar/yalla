@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Add `npm run yalla:run` operator controls: `doctor`, `event`, `checkpoint`, `status`, `report`, `resume`, `rewind`, and `export`.
+- Add structured run timeline artifacts (`.pipeline/events.jsonl`) and local checkpoints (`.pipeline/checkpoints/*`, `.pipeline/latest-checkpoint.json`).
+- Add local HTML run reports with pipeline graph, status JSON, recent events, artifact counts, and timing telemetry.
+- Add portable run export bundles under `.pipeline/export-*`.
+- Add optional `models:` phase-routing hints to `YALLA.md` and validate them during onboarding/doctor checks.
+- Accept `doc-alignment-check` as a canonical onboarding risk gate so the seeded example config passes first-run validation.
+
 ## 1.2.0
 
 - Add an optional, config-gated **memory** subsystem: a Phase 0b pre-flight recall and a Phase 5 compound memory-save step in `/yalla`, activated only by a `memory:` block in `.claude/YALLA.md` (off by default; independent of `tracking_mode`).

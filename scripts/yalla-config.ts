@@ -8,6 +8,7 @@ export type YallaConfig = {
   trackingMode?: string
   testDir?: string
   commands: Record<string, string>
+  models: Record<string, string>
   taskSystem: {
     readyLabel?: string
     blockLabels: string[]
@@ -48,6 +49,7 @@ export function inferConfigRoot(configPath: string) {
 
 const DEFAULT_CONFIG: YallaConfig = {
   commands: {},
+  models: {},
   taskSystem: {
     blockLabels: [],
     priorityLabels: [],
@@ -88,6 +90,7 @@ function configCandidates(rootDir: string, explicitPath?: string) {
 function cloneDefaultConfig(): YallaConfig {
   return {
     commands: {},
+    models: {},
     taskSystem: { blockLabels: [], priorityLabels: [], riskLabels: [] },
     autopilot: { eligibleLabels: [], blockLabels: [] },
     evals: {},
@@ -168,6 +171,7 @@ function applyTopLevel(config: YallaConfig, key: string, rawValue: string, secti
 function applyNested(config: YallaConfig, parent: string, key: string, rawValue: string) {
   const value = parseScalar(rawValue)
   if (parent === 'commands') config.commands[key] = String(value ?? '')
+  else if (parent === 'models') config.models[key] = String(value ?? '')
   else if (parent === 'task_system') applyTaskSystem(config, key, value)
   else if (parent === 'autopilot') applyAutopilot(config, key, value)
   else if (parent === 'evals') applyEvals(config, key, value)

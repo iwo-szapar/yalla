@@ -24,6 +24,19 @@ commands:
   build: "npm run build"
   lint: "npm run lint"
 
+## Model Routing (optional)
+
+# Phase-level model hints. Claude Code/plugin hosts may ignore these if they do
+# not support explicit model switching, but Yalla surfaces and validates them so
+# the intended cost/quality posture is visible in doctor/status/report output.
+models:
+  classify: "cheap"             # fast/cheap model is enough for routing
+  plan: "sonnet"                # strong planner for grounded design
+  implement: "sonnet"           # default build model
+  test: "sonnet"                # can be cheaper if tests are mechanical
+  review: "opus"                # independent high-rigor review when available
+  summarize: "cheap"            # PR/report summaries
+
 ## Test Layout
 
 # Where tests live and how they're named — the tester agent matches these.

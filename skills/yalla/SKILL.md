@@ -48,6 +48,8 @@ If empty, ask "What are we building?" Do not proceed without a clear description
 - Do not invent a parallel ID scheme for new work; reference issues by `issue-###`.
 - If GitHub CLI is unavailable, halt and ask the user to run `gh auth login`. (An optional SQL task store is described in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SQL-TEMPLATES.md`; only use it if `.claude/YALLA.md` sets `tracking_mode: db`.)
 - Every run must produce `.pipeline/outcome-evaluation.json` before shipping.
+- Every non-tiny run must append structured lifecycle entries to `.pipeline/events.jsonl` and write checkpoints after classify, plan, each meaningful work slice, test, review, and ship. Use `npm run yalla:run -- event ...` and `npm run yalla:run -- checkpoint ...` when the cloned Yalla repo is available.
+- Before shipping, generate or refresh `.pipeline/report.html` with `npm run yalla:run -- report` when the run produced meaningful evidence artifacts.
 - Only verdict `PROVEN` may be described as done, complete, ready to merge, or safe for autopilot progression.
 - Verdicts `NOT_PROVEN` and `INCONCLUSIVE` are honest outcomes, not success states.
 
@@ -165,6 +167,7 @@ Classify the task before planning:
    - `applies` if the task changes product behavior, user/admin/operator journeys, GTM/pricing/positioning surfaces, money, access, entitlements, delivery, onboarding, public product pages, generated artifacts, or agent workflows that decide what gets built.
    - `n/a` for tiny hotfixes, isolated tests, dependency/config updates, mechanical refactors, or docs edits that do not define future product behavior. Include a specific reason.
 10. Write `.pipeline/classification.json` and add the same fields to `.pipeline-state.json`.
+11. Record the phase in `.pipeline/events.jsonl` and checkpoint with phase `classify`.
 
 ### Conditional routing
 
