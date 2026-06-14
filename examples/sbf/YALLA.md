@@ -107,7 +107,7 @@ risk_gates:
     triggers_on: [auth, mcp]
   - name: email-delivery-check
     triggers_on: [email]
-  - name: generated-artifacts-check
+  - name: generated-artifact-check
     triggers_on: [repo-generator]
   - name: async-reliability-check
     triggers_on: [stripe, repo-generator, vercel]

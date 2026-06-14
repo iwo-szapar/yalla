@@ -27,6 +27,10 @@ export type YallaConfig = {
     smokeCommand?: string
     projectFixturesRequiredBeforeAutopilot?: boolean
   }
+  riskGates: Array<{
+    name: string
+    triggersOn: string[]
+  }>
 }
 
 export type LoadedYallaConfig = {
@@ -54,6 +58,7 @@ const DEFAULT_CONFIG: YallaConfig = {
     blockLabels: [],
   },
   evals: {},
+  riskGates: [],
 }
 
 export function loadYallaConfig(options: { rootDir?: string; configPath?: string } = {}): LoadedYallaConfig {
@@ -86,6 +91,7 @@ function cloneDefaultConfig(): YallaConfig {
     taskSystem: { blockLabels: [], priorityLabels: [], riskLabels: [] },
     autopilot: { eligibleLabels: [], blockLabels: [] },
     evals: {},
+    riskGates: [],
   }
 }
 
@@ -93,6 +99,7 @@ export function parseYallaConfig(input: string): YallaConfig {
   const config = cloneDefaultConfig()
   let section = ''
   let nested = ''
+  let currentRiskGate: YallaConfig['riskGates'][number] | undefined
 
   for (const rawLine of input.split('\n')) {
     const line = stripInlineComment(rawLine).trimEnd()
@@ -103,6 +110,21 @@ export function parseYallaConfig(input: string): YallaConfig {
       continue
     }
     if (line.startsWith('#')) continue
+
+    if (nested === 'risk_gates') {
+      const listItem = line.match(/^\s*-\s+name:\s*(.*)$/)
+      if (listItem) {
+        currentRiskGate = { name: stringValue(parseScalar(listItem[1])), triggersOn: [] }
+        config.riskGates.push(currentRiskGate)
+        continue
+      }
+
+      const riskGateChild = line.match(/^\s+([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/)
+      if (riskGateChild && currentRiskGate) {
+        applyRiskGate(currentRiskGate, riskGateChild[1], parseScalar(riskGateChild[2]))
+        continue
+      }
+    }
 
     const top = line.match(/^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/)
     if (top && !rawLine.startsWith(' ')) {
@@ -171,6 +193,11 @@ function applyAutopilot(config: YallaConfig, key: string, value: unknown) {
 function applyEvals(config: YallaConfig, key: string, value: unknown) {
   if (key === 'smoke_command') config.evals.smokeCommand = stringValue(value)
   else if (key === 'project_fixtures_required_before_autopilot') config.evals.projectFixturesRequiredBeforeAutopilot = booleanValue(value)
+}
+
+function applyRiskGate(riskGate: YallaConfig['riskGates'][number], key: string, value: unknown) {
+  if (key === 'name') riskGate.name = stringValue(value)
+  else if (key === 'triggers_on') riskGate.triggersOn = arrayValue(value)
 }
 
 function parseScalar(value: string): unknown {

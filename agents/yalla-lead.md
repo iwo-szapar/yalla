@@ -59,7 +59,7 @@ Read `.claude/YALLA.md` first. It defines the repo, `base_branch`, the project `
 
 ### Pre-Flight
 
-Follow `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PREFLIGHT.md`: read `tracking_mode` (default `github`), run `gh auth status`, resolve `$REPO` and `$BASE_BRANCH`, verify issue access, fetch the base branch, and write `.pipeline-state.json` with the detected `tracking_mode` and `github_available`. If `gh` is unavailable, degrade to file-only tracking and tell the user.
+Follow `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PREFLIGHT.md`: read `tracking_mode` (default `github`), run `gh auth status`, resolve `$REPO` and `$BASE_BRANCH`, verify issue access, fetch the base branch, and write `.pipeline-state.json` with the detected `tracking_mode` and `github_available`. If `tracking_mode: github` and `gh` is unavailable, halt and ask the user to run `gh auth login`; only use file-only when `.claude/YALLA.md` explicitly sets `tracking_mode: file-only`.
 
 ### Classify And Track
 
