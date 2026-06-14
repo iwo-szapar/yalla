@@ -25,6 +25,9 @@ models:
   classify: "cheap"
   implement: "sonnet"
   review: "opus"
+verifiers:
+  api: "npm test"
+  visual: ".pipeline/visual-evidence/"
 task_system:
   ready_label: yalla-ready
   block_labels: [blocked, needs-human]
@@ -58,6 +61,7 @@ describe('scripts/yalla-onboard.ts', () => {
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'config', status: 'pass' }), expect.objectContaining({ name: 'github_labels', status: 'pass' })]))
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'risk_gates', status: 'pass' })]))
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'model_routing', status: 'pass' })]))
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'verifier_registry', status: 'pass' })]))
   })
 
   it('fails onboarding when a configured risk gate is not canonical', async () => {

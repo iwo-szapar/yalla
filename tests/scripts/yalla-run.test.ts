@@ -25,7 +25,13 @@ models:
   classify: "cheap"
   implement: "sonnet"
   review: "opus"
-${extra}`
+verifiers:
+  api: "npm test"
+  visual: ".pipeline/visual-evidence/"
+${extra}autopilot:
+  max_iterations: 2
+  max_runtime_minutes: 30
+`
   )
 }
 
@@ -57,13 +63,23 @@ describe('scripts/yalla-run.ts', () => {
   it('generates a local HTML run report', async () => {
     const root = tempRoot()
     writeConfig(root)
+    mkdirSync(join(root, '.pipeline/visual-evidence'), { recursive: true })
+    writeFileSync(join(root, '.pipeline/visual-evidence/after.svg'), '<svg></svg>')
+    writeFileSync(join(root, '.pipeline/benchmarks.json'), JSON.stringify({ p95_ms: 120 }))
     await runYallaRun({ command: 'event', rootDir: root, event: 'review.completed', phase: 'review', message: 'Review passed' })
+    await runYallaRun({ command: 'goal', rootDir: root, message: 'Ship a verified healthcheck', criteria: ['returns ok'], evidence: ['npm test'] })
+    await runYallaRun({ command: 'evaluate', rootDir: root, evaluator: 'reviewer', verdict: 'PASS', message: 'Evidence is sufficient' })
     const result = await runYallaRun({ command: 'report', rootDir: root })
 
     expect(result.reportPath).toBe(join(root, '.pipeline/report.html'))
     const html = readFileSync(result.reportPath ?? '', 'utf8')
     expect(html).toContain('Yalla Run Report')
     expect(html).toContain('Pipeline Graph')
+    expect(html).toContain('Goal Contract')
+    expect(html).toContain('Evaluator Results')
+    expect(html).toContain('Visual Evidence')
+    expect(html).toContain('after.svg')
+    expect(html).toContain('Benchmarks')
     expect(html).toContain('review.completed')
     expect(html).toContain('Review passed')
   })
@@ -96,12 +112,12 @@ describe('scripts/yalla-run.ts', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'model_routing', status: 'pass' }), expect.objectContaining({ name: 'github_auth', status: 'pass' })]))
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'model_routing', status: 'pass' }), expect.objectContaining({ name: 'verifier_registry', status: 'pass' }), expect.objectContaining({ name: 'github_auth', status: 'pass' })]))
   })
 
-  it('doctor fails unknown model route keys', async () => {
+  it('doctor fails unknown verifier route keys', async () => {
     const root = tempRoot()
-    writeConfig(root, '  expensive: "opus"\n')
+    writeConfig(root, '  mystery: "custom verifier"\n')
     const result = await runYallaRun({
       command: 'doctor',
       rootDir: root,
@@ -109,7 +125,34 @@ describe('scripts/yalla-run.ts', () => {
     })
 
     expect(result.exitCode).toBe(1)
-    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'model_routing', status: 'fail', detail: expect.stringContaining('expensive') })]))
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'verifier_registry', status: 'fail', detail: expect.stringContaining('mystery') })]))
+  })
+
+  it('writes goal contracts, evaluator results, and loop state', async () => {
+    const root = tempRoot()
+    writeConfig(root)
+    const goal = await runYallaRun({ command: 'goal', rootDir: root, message: 'Deliver a tested feature', criteria: ['test passes'], constraint: ['no API drift'], evidence: ['npm test'], forbiddenShortcut: ['model-only proof'] })
+    const evaluation = await runYallaRun({ command: 'evaluate', rootDir: root, evaluator: 'test-reviewer', verdict: 'FAIL', finding: ['missing negative path'], message: 'Add a negative test' })
+    const loop = await runYallaRun({ command: 'loop', rootDir: root })
+
+    expect(goal.goalPath).toBe(join(root, '.pipeline/goal-contract.json'))
+    expect(evaluation.exitCode).toBe(1)
+    expect(evaluation.evaluatorPath).toBe(join(root, '.pipeline/evaluator-results.json'))
+    expect(loop.loopPath).toBe(join(root, '.pipeline/loop-state.json'))
+    expect(loop.status).toMatchObject({ decision: 'continue', next_instruction: 'Add a negative test' })
+  })
+
+  it('mines sessions for durable update suggestions', async () => {
+    const root = tempRoot()
+    writeConfig(root)
+    mkdirSync(join(root, '.pipeline'), { recursive: true })
+    writeFileSync(join(root, '.pipeline/test-evidence.json'), JSON.stringify({ commands: [{ command: 'npm test', status: 'fail' }] }))
+    writeFileSync(join(root, '.pipeline/review-results.json'), JSON.stringify({ checks: [{ name: 'coverage', verdict: 'FAIL' }] }))
+    await runYallaRun({ command: 'event', rootDir: root, event: 'run.inconclusive', phase: 'test', message: 'blocked by missing fixture' })
+    const result = await runYallaRun({ command: 'mine-sessions', rootDir: root })
+
+    expect(result.miningPath).toBe(join(root, '.pipeline/session-mining-report.json'))
+    expect(result.status?.suggested_updates).toEqual(expect.arrayContaining([expect.objectContaining({ target: '.claude/YALLA.md gotchas' }), expect.objectContaining({ target: 'knowledge/yalla/PROJECT-CHECKS.md' }), expect.objectContaining({ target: 'eval/yalla/data' })]))
   })
 
   it('resume and rewind return non-destructive instructions', async () => {

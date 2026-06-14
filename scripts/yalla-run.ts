@@ -12,6 +12,7 @@ type RunPhase = 'classify' | 'track' | 'plan' | 'work' | 'test' | 'review' | 'co
 type Verdict = 'PROVEN' | 'NOT_PROVEN' | 'INCONCLUSIVE' | 'UNKNOWN'
 type CommandResult = { stdout: string; stderr: string; exitCode: number }
 type CommandRunner = (command: string, args: string[]) => Promise<CommandResult>
+type LoopDecision = 'continue' | 'stop-proven' | 'stop-inconclusive' | 'stop-budget' | 'blocked'
 
 export type YallaRunEvent = {
   id: string
@@ -29,7 +30,7 @@ type Check = {
 }
 
 type RunOptions = {
-  command: 'event' | 'checkpoint' | 'status' | 'report' | 'doctor' | 'resume' | 'rewind' | 'export'
+  command: 'event' | 'checkpoint' | 'status' | 'report' | 'doctor' | 'resume' | 'rewind' | 'export' | 'goal' | 'evaluate' | 'loop' | 'mine-sessions'
   rootDir?: string
   configPath?: string
   event?: string
@@ -37,6 +38,13 @@ type RunOptions = {
   runId?: string
   message?: string
   target?: string
+  verdict?: string
+  criteria?: string[]
+  constraint?: string[]
+  evidence?: string[]
+  forbiddenShortcut?: string[]
+  evaluator?: string
+  finding?: string[]
   commandRunner?: CommandRunner
   now?: () => string
 }
@@ -48,18 +56,23 @@ export type YallaRunResult = {
   status?: Record<string, unknown>
   reportPath?: string
   exportPath?: string
+  goalPath?: string
+  evaluatorPath?: string
+  loopPath?: string
+  miningPath?: string
   checks?: Check[]
   instruction?: string
 }
 
 const PHASE_ORDER: RunPhase[] = ['classify', 'track', 'plan', 'work', 'test', 'review', 'compound', 'ship']
 const MODEL_KEYS = new Set(['classify', 'plan', 'implement', 'test', 'review', 'summarize'])
+const VERIFIER_KEYS = new Set(['api', 'ui', 'perf', 'docs', 'research', 'visual', 'benchmark', 'security', 'accessibility'])
 
 function parseArgs(argv: string[]): RunOptions {
   const command = argv[0]
-  if (!isCommand(command)) throw new Error('Usage: tsx scripts/yalla-run.ts event|checkpoint|status|report|doctor|resume|rewind|export [--config path] [--phase name] [--event name] [--message text] [--target checkpoint] [--run-id id]')
+  if (!isCommand(command)) throw new Error('Usage: tsx scripts/yalla-run.ts event|checkpoint|status|report|doctor|resume|rewind|export|goal|evaluate|loop|mine-sessions [--config path] [--phase name] [--event name] [--message text] [--target checkpoint] [--run-id id]')
 
-  const options: RunOptions = { command }
+  const options: RunOptions = { command, criteria: [], constraint: [], evidence: [], forbiddenShortcut: [], finding: [] }
   for (let index = 1; index < argv.length; index++) {
     const arg = argv[index]
     if (arg === '--config') options.configPath = argv[++index] ?? ''
@@ -68,13 +81,20 @@ function parseArgs(argv: string[]): RunOptions {
     else if (arg === '--message') options.message = argv[++index] ?? ''
     else if (arg === '--target') options.target = argv[++index] ?? ''
     else if (arg === '--run-id') options.runId = argv[++index] ?? ''
+    else if (arg === '--verdict') options.verdict = argv[++index] ?? ''
+    else if (arg === '--criterion') options.criteria?.push(argv[++index] ?? '')
+    else if (arg === '--constraint') options.constraint?.push(argv[++index] ?? '')
+    else if (arg === '--evidence') options.evidence?.push(argv[++index] ?? '')
+    else if (arg === '--forbid') options.forbiddenShortcut?.push(argv[++index] ?? '')
+    else if (arg === '--evaluator') options.evaluator = argv[++index] ?? ''
+    else if (arg === '--finding') options.finding?.push(argv[++index] ?? '')
     else throw new Error(`Unknown arg: ${arg}`)
   }
   return options
 }
 
 function isCommand(value: string | undefined): value is RunOptions['command'] {
-  return value === 'event' || value === 'checkpoint' || value === 'status' || value === 'report' || value === 'doctor' || value === 'resume' || value === 'rewind' || value === 'export'
+  return value === 'event' || value === 'checkpoint' || value === 'status' || value === 'report' || value === 'doctor' || value === 'resume' || value === 'rewind' || value === 'export' || value === 'goal' || value === 'evaluate' || value === 'loop' || value === 'mine-sessions'
 }
 
 async function defaultCommandRunner(command: string, args: string[]): Promise<CommandResult> {
@@ -101,7 +121,11 @@ export async function runYallaRun(options: RunOptions): Promise<YallaRunResult> 
   if (options.command === 'doctor') return runDoctor(rootDir, loadedConfig, commandRunner)
   if (options.command === 'resume') return resumeInstruction(rootDir)
   if (options.command === 'rewind') return rewindInstruction(rootDir, options.target)
-  return exportBundle(rootDir)
+  if (options.command === 'export') return exportBundle(rootDir)
+  if (options.command === 'goal') return writeGoalContract(rootDir, loadedConfig, options, now)
+  if (options.command === 'evaluate') return writeEvaluatorResult(rootDir, options, now)
+  if (options.command === 'loop') return writeLoopState(rootDir, loadedConfig, now)
+  return writeSessionMiningReport(rootDir, now)
 }
 
 function recordEvent(rootDir: string, options: RunOptions, now: () => string): YallaRunResult {
@@ -145,16 +169,19 @@ function readStatus(rootDir: string): YallaRunResult {
   return { exitCode: 0, status: buildStatus(rootDir) }
 }
 
-function buildStatus(rootDir: string) {
+function buildStatus(rootDir: string, loadedConfig?: LoadedYallaConfig) {
   const latest = readJson(resolve(rootDir, '.pipeline/latest-checkpoint.json'))
   const classification = readJson(resolve(rootDir, '.pipeline/classification.json'))
   const outcome = readJson(resolve(rootDir, '.pipeline/outcome-evaluation.json'))
   const acceptance = readJson(resolve(rootDir, '.pipeline/acceptance-trace.json'))
   const review = readJson(resolve(rootDir, '.pipeline/review-results.json'))
+  const goal = readJson(resolve(rootDir, '.pipeline/goal-contract.json'))
+  const evaluator = readJson(resolve(rootDir, '.pipeline/evaluator-results.json'))
   const events = readEvents(rootDir)
   const telemetry = buildTelemetry(events)
   const phase = String(latest?.phase ?? classification?.phase ?? 'unknown')
   const verdict = readVerdict(outcome)
+  const budget = loadedConfig ? budgetState(loadedConfig, events) : budgetFromGoal(goal, events)
   return {
     phase,
     verdict,
@@ -163,8 +190,11 @@ function buildStatus(rootDir: string) {
     artifacts: listPipelineArtifacts(rootDir),
     acceptance_criteria: Array.isArray(acceptance?.criteria) ? acceptance.criteria.length : null,
     review_checks: Array.isArray(review?.checks) ? review.checks.length : null,
+    goal_contract: Boolean(goal),
+    evaluator_results: Array.isArray(evaluator?.results) ? evaluator.results.length : null,
     events: events.length,
     telemetry,
+    budget,
     next_action: nextAction(phase, verdict),
   }
 }
@@ -172,7 +202,7 @@ function buildStatus(rootDir: string) {
 function writeReport(rootDir: string, loadedConfig: LoadedYallaConfig): YallaRunResult {
   const pipelineDir = ensurePipeline(rootDir)
   const path = resolve(pipelineDir, 'report.html')
-  const status = buildStatus(rootDir)
+  const status = buildStatus(rootDir, loadedConfig)
   const events = readEvents(rootDir)
   writeFileSync(path, renderReport(rootDir, loadedConfig, status, events))
   return { exitCode: 0, reportPath: path, status }
@@ -187,6 +217,7 @@ async function runDoctor(rootDir: string, loadedConfig: LoadedYallaConfig, comma
   checks.push({ name: 'commands.typecheck', status: config.commands.typecheck !== undefined ? 'pass' : 'warn', detail: config.commands.typecheck ?? 'Missing typecheck command or explicit empty string' })
   checks.push({ name: 'test_dir', status: config.testDir && existsSync(resolve(rootDir, config.testDir)) ? 'pass' : 'warn', detail: config.testDir ?? 'Missing test_dir' })
   checks.push(modelRoutingCheck(config.models))
+  checks.push(verifierRegistryCheck(config.verifiers))
   const git = await commandRunner('git', ['rev-parse', '--is-inside-work-tree'])
   checks.push({ name: 'git_repo', status: git.exitCode === 0 ? 'pass' : 'fail', detail: git.exitCode === 0 ? 'Git repository detected' : 'Not inside a Git repository' })
   const gh = await commandRunner('gh', ['auth', 'status'])
@@ -230,12 +261,112 @@ function exportBundle(rootDir: string): YallaRunResult {
   return { exitCode: 0, exportPath: exportDir, status: { exported_artifacts: listDirectoryFiles(exportDir) } }
 }
 
+function writeGoalContract(rootDir: string, loadedConfig: LoadedYallaConfig, options: RunOptions, now: () => string): YallaRunResult {
+  const pipelineDir = ensurePipeline(rootDir)
+  const path = resolve(pipelineDir, 'goal-contract.json')
+  const budget = budgetState(loadedConfig, readEvents(rootDir))
+  const contract = {
+    version: 1,
+    created_at: now(),
+    desired_end_state: options.message || 'Describe the desired end state before implementation starts.',
+    success_criteria: cleanList(options.criteria),
+    constraints: cleanList(options.constraint),
+    budget: {
+      max_iterations: budget.max_iterations,
+      max_runtime_minutes: budget.max_runtime_minutes,
+      token_budget: budget.token_budget,
+    },
+    forbidden_shortcuts: cleanList(options.forbiddenShortcut),
+    required_evidence: cleanList(options.evidence),
+    verifier_registry: loadedConfig.config.verifiers,
+  }
+  writeFileSync(path, `${JSON.stringify(contract, null, 2)}\n`)
+  recordEvent(rootDir, { ...options, command: 'event', event: 'goal.contract.created', phase: options.phase ?? 'classify', message: contract.desired_end_state }, now)
+  return { exitCode: 0, goalPath: path, status: contract }
+}
+
+function writeEvaluatorResult(rootDir: string, options: RunOptions, now: () => string): YallaRunResult {
+  const pipelineDir = ensurePipeline(rootDir)
+  const path = resolve(pipelineDir, 'evaluator-results.json')
+  const existing = readJson(path)
+  const results = Array.isArray(existing?.results) ? existing.results : []
+  const verdict = normalizeEvaluatorVerdict(options.verdict)
+  const result = {
+    ts: now(),
+    evaluator: options.evaluator || 'independent-evaluator',
+    verdict,
+    phase: options.phase ?? buildStatus(rootDir).phase,
+    findings: cleanList(options.finding),
+    next_instruction: options.message || evaluatorNextInstruction(verdict),
+  }
+  const document = { version: 1, results: [...results, result] }
+  writeFileSync(path, `${JSON.stringify(document, null, 2)}\n`)
+  recordEvent(rootDir, { ...options, command: 'event', event: 'evaluator.completed', phase: result.phase, message: `${result.evaluator}: ${result.verdict}` }, now)
+  return { exitCode: verdict === 'FAIL' ? 1 : 0, evaluatorPath: path, status: result }
+}
+
+function writeLoopState(rootDir: string, loadedConfig: LoadedYallaConfig, now: () => string): YallaRunResult {
+  const pipelineDir = ensurePipeline(rootDir)
+  const path = resolve(pipelineDir, 'loop-state.json')
+  const status = buildStatus(rootDir, loadedConfig)
+  const goal = readJson(resolve(rootDir, '.pipeline/goal-contract.json'))
+  const evaluator = readJson(resolve(rootDir, '.pipeline/evaluator-results.json'))
+  const latestEvaluator = Array.isArray(evaluator?.results) ? evaluator.results.at(-1) as Record<string, unknown> | undefined : undefined
+  const decision = loopDecision(status, latestEvaluator)
+  const loopState = {
+    ts: now(),
+    decision,
+    iteration: status.budget?.iterations_used ?? 0,
+    budget: status.budget,
+    goal_present: Boolean(goal),
+    evaluator_verdict: latestEvaluator?.verdict ?? null,
+    next_instruction: loopInstruction(decision, status, latestEvaluator),
+  }
+  writeFileSync(path, `${JSON.stringify(loopState, null, 2)}\n`)
+  recordEvent(rootDir, { command: 'event', event: 'loop.evaluated', phase: String(status.phase ?? ''), message: `${decision}: ${loopState.next_instruction}` }, now)
+  return { exitCode: decision === 'continue' ? 0 : decision === 'stop-proven' ? 0 : 1, loopPath: path, status: loopState }
+}
+
+function writeSessionMiningReport(rootDir: string, now: () => string): YallaRunResult {
+  const pipelineDir = ensurePipeline(rootDir)
+  const path = resolve(pipelineDir, 'session-mining-report.json')
+  const events = readEvents(rootDir)
+  const testEvidence = readJson(resolve(rootDir, '.pipeline/test-evidence.json'))
+  const reviewResults = readJson(resolve(rootDir, '.pipeline/review-results.json'))
+  const failedCommands = Array.isArray(testEvidence?.commands)
+    ? (testEvidence.commands as Array<Record<string, unknown>>).filter(command => command.status && command.status !== 'pass')
+    : []
+  const failedReviews = Array.isArray(reviewResults?.checks)
+    ? (reviewResults.checks as Array<Record<string, unknown>>).filter(check => check.verdict === 'FAIL' || check.status === 'fail')
+    : []
+  const report = {
+    generated_at: now(),
+    total_events: events.length,
+    repeated_events: repeatedEventSummary(events),
+    failed_commands: failedCommands,
+    failed_reviews: failedReviews,
+    blocker_patterns: events.filter(event => event.event.includes('blocked') || String(event.properties.message ?? '').toLowerCase().includes('blocked')),
+    suggested_updates: suggestedSessionUpdates(events, failedCommands, failedReviews),
+  }
+  writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`)
+  recordEvent(rootDir, { command: 'event', event: 'sessions.mined', phase: 'compound', message: `${report.suggested_updates.length} suggested update(s)` }, now)
+  return { exitCode: 0, miningPath: path, status: report }
+}
+
 function modelRoutingCheck(models: Record<string, string>): Check {
   const keys = Object.keys(models)
   if (!keys.length) return { name: 'model_routing', status: 'warn', detail: 'No models block configured; default Claude Code model will be used for all phases' }
   const unknown = keys.filter(key => !MODEL_KEYS.has(key))
   if (unknown.length) return { name: 'model_routing', status: 'fail', detail: `Unknown model route(s): ${unknown.join(', ')}` }
   return { name: 'model_routing', status: 'pass', detail: keys.map(key => `${key}=${models[key]}`).join(', ') }
+}
+
+function verifierRegistryCheck(verifiers: Record<string, string>): Check {
+  const keys = Object.keys(verifiers)
+  if (!keys.length) return { name: 'verifier_registry', status: 'warn', detail: 'No verifiers block configured; agents must infer proof commands from project context' }
+  const unknown = keys.filter(key => !VERIFIER_KEYS.has(key))
+  if (unknown.length) return { name: 'verifier_registry', status: 'fail', detail: `Unknown verifier route(s): ${unknown.join(', ')}` }
+  return { name: 'verifier_registry', status: 'pass', detail: keys.map(key => `${key}=${verifiers[key]}`).join(', ') }
 }
 
 function ensurePipeline(rootDir: string) {
@@ -325,10 +456,110 @@ function buildTelemetry(events: YallaRunEvent[]) {
   }
 }
 
+function budgetState(loadedConfig: LoadedYallaConfig, events: YallaRunEvent[]) {
+  const maxIterations = loadedConfig.config.autopilot.maxIterations ?? 3
+  const maxRuntimeMinutes = loadedConfig.config.autopilot.maxRuntimeMinutes ?? 45
+  const telemetry = buildTelemetry(events)
+  const iterationsUsed = events.filter(event => event.event === 'loop.evaluated').length
+  const runtimeMinutesUsed = typeof telemetry.duration_seconds === 'number' ? Math.round(telemetry.duration_seconds / 60) : 0
+  return {
+    max_iterations: maxIterations,
+    iterations_used: iterationsUsed,
+    iterations_remaining: Math.max(0, maxIterations - iterationsUsed),
+    max_runtime_minutes: maxRuntimeMinutes,
+    runtime_minutes_used: runtimeMinutesUsed,
+    runtime_minutes_remaining: Math.max(0, maxRuntimeMinutes - runtimeMinutesUsed),
+    token_budget: loadedConfig.config.autopilot.tokenBudget ?? 'repo-defined',
+    exhausted: iterationsUsed >= maxIterations || runtimeMinutesUsed >= maxRuntimeMinutes,
+  }
+}
+
+function budgetFromGoal(goal: Record<string, unknown> | null, events: YallaRunEvent[]) {
+  const budget = goal?.budget as Record<string, unknown> | undefined
+  const maxIterations = Number(budget?.max_iterations ?? 3)
+  const maxRuntimeMinutes = Number(budget?.max_runtime_minutes ?? 45)
+  const telemetry = buildTelemetry(events)
+  const iterationsUsed = events.filter(event => event.event === 'loop.evaluated').length
+  const runtimeMinutesUsed = typeof telemetry.duration_seconds === 'number' ? Math.round(telemetry.duration_seconds / 60) : 0
+  return {
+    max_iterations: Number.isFinite(maxIterations) ? maxIterations : 3,
+    iterations_used: iterationsUsed,
+    iterations_remaining: Math.max(0, (Number.isFinite(maxIterations) ? maxIterations : 3) - iterationsUsed),
+    max_runtime_minutes: Number.isFinite(maxRuntimeMinutes) ? maxRuntimeMinutes : 45,
+    runtime_minutes_used: runtimeMinutesUsed,
+    runtime_minutes_remaining: Math.max(0, (Number.isFinite(maxRuntimeMinutes) ? maxRuntimeMinutes : 45) - runtimeMinutesUsed),
+    token_budget: budget?.token_budget ?? 'repo-defined',
+    exhausted: iterationsUsed >= (Number.isFinite(maxIterations) ? maxIterations : 3) || runtimeMinutesUsed >= (Number.isFinite(maxRuntimeMinutes) ? maxRuntimeMinutes : 45),
+  }
+}
+
+function cleanList(values: string[] | undefined) {
+  return (values ?? []).map(value => value.trim()).filter(Boolean)
+}
+
+function normalizeEvaluatorVerdict(value: string | undefined) {
+  const upper = String(value ?? 'INCONCLUSIVE').toUpperCase()
+  if (upper === 'PASS' || upper === 'FAIL' || upper === 'INCONCLUSIVE') return upper
+  return 'INCONCLUSIVE'
+}
+
+function evaluatorNextInstruction(verdict: string) {
+  if (verdict === 'PASS') return 'Proceed to the next phase or final proof evaluation.'
+  if (verdict === 'FAIL') return 'Fix the evaluator findings before continuing.'
+  return 'Collect stronger evidence or ask for human judgment before continuing.'
+}
+
+function loopDecision(status: Record<string, unknown>, latestEvaluator?: Record<string, unknown>): LoopDecision {
+  const budget = status.budget as { exhausted?: boolean } | undefined
+  if (budget?.exhausted) return 'stop-budget'
+  if (status.verdict === 'PROVEN') return 'stop-proven'
+  if (status.verdict === 'INCONCLUSIVE') return 'stop-inconclusive'
+  if (latestEvaluator?.verdict === 'FAIL') return 'continue'
+  if (latestEvaluator?.verdict === 'INCONCLUSIVE') return 'stop-inconclusive'
+  if (!status.goal_contract) return 'blocked'
+  return 'continue'
+}
+
+function loopInstruction(decision: LoopDecision, status: Record<string, unknown>, latestEvaluator?: Record<string, unknown>) {
+  if (decision === 'stop-proven') return 'Stop: proof contract is PROVEN. Prepare PR summary/export.'
+  if (decision === 'stop-inconclusive') return 'Stop: evidence is inconclusive. Ask for human or external verifier input.'
+  if (decision === 'stop-budget') return 'Stop: loop budget exhausted. Summarize remaining delta and ask for direction.'
+  if (decision === 'blocked') return 'Create `.pipeline/goal-contract.json` before starting the loop.'
+  if (latestEvaluator?.next_instruction) return String(latestEvaluator.next_instruction)
+  return `Continue from phase ${String(status.phase ?? 'unknown')} and collect missing verifier evidence.`
+}
+
+function repeatedEventSummary(events: YallaRunEvent[]) {
+  const counts = new Map<string, number>()
+  for (const event of events) counts.set(event.event, (counts.get(event.event) ?? 0) + 1)
+  return [...counts.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([event, count]) => ({ event, count }))
+    .sort((a, b) => b.count - a.count || a.event.localeCompare(b.event))
+}
+
+function suggestedSessionUpdates(events: YallaRunEvent[], failedCommands: Array<Record<string, unknown>>, failedReviews: Array<Record<string, unknown>>) {
+  const suggestions: Array<{ target: string; reason: string; suggested_text: string }> = []
+  if (failedCommands.length) {
+    suggestions.push({ target: '.claude/YALLA.md gotchas', reason: 'Repeated or failed command evidence found', suggested_text: 'Add a gotcha that names the failing command and the precondition required before running it.' })
+  }
+  if (failedReviews.length) {
+    suggestions.push({ target: 'knowledge/yalla/PROJECT-CHECKS.md', reason: 'Review failures found', suggested_text: 'Promote the recurring review failure into a binary project check.' })
+  }
+  if (events.some(event => event.event.includes('inconclusive'))) {
+    suggestions.push({ target: 'eval/yalla/data', reason: 'Inconclusive run state appeared', suggested_text: 'Add an eval fixture that prevents this inconclusive evidence gap from being counted as success.' })
+  }
+  return suggestions
+}
+
 function renderReport(rootDir: string, loadedConfig: LoadedYallaConfig, status: Record<string, unknown>, events: YallaRunEvent[]) {
   const eventRows = events.slice(-50).map(event => `<tr><td>${escapeHtml(event.ts)}</td><td>${escapeHtml(event.event)}</td><td>${escapeHtml(event.phase ?? '')}</td><td>${escapeHtml(String(event.properties.message ?? ''))}</td></tr>`).join('')
   const artifacts = Array.isArray(status.artifacts) ? status.artifacts as string[] : []
   const completed = new Set(Array.isArray(status.completed_phases) ? status.completed_phases as string[] : [])
+  const goal = readJson(resolve(rootDir, '.pipeline/goal-contract.json'))
+  const evaluator = readJson(resolve(rootDir, '.pipeline/evaluator-results.json'))
+  const benchmarks = readJson(resolve(rootDir, '.pipeline/benchmarks.json'))
+  const visualEvidence = listVisualEvidence(rootDir)
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -371,12 +602,30 @@ function renderReport(rootDir: string, loadedConfig: LoadedYallaConfig, status: 
   </section>
   <section class="card" style="margin-top:24px"><h2>Next Action</h2><pre>${escapeHtml(String(status.next_action))}</pre></section>
   <section class="card" style="margin-top:24px"><h2>Pipeline Graph</h2><div class="flow">${PHASE_ORDER.map(phase => `<div class="phase ${completed.has(phase) ? 'done' : ''}">${escapeHtml(phase)}</div>`).join('')}</div></section>
+  <section class="card" style="margin-top:24px"><h2>Goal Contract</h2><pre>${escapeHtml(goal ? JSON.stringify(goal, null, 2) : 'No goal contract recorded yet.')}</pre></section>
+  <section class="card" style="margin-top:24px"><h2>Evaluator Results</h2><pre>${escapeHtml(evaluator ? JSON.stringify(evaluator, null, 2) : 'No evaluator results recorded yet.')}</pre></section>
+  <section class="card" style="margin-top:24px"><h2>Visual Evidence</h2>${renderVisualEvidence(visualEvidence)}</section>
+  <section class="card" style="margin-top:24px"><h2>Benchmarks</h2><pre>${escapeHtml(benchmarks ? JSON.stringify(benchmarks, null, 2) : 'No benchmark artifact recorded yet.')}</pre></section>
   <section class="card" style="margin-top:24px"><h2>Status JSON</h2><pre>${escapeHtml(JSON.stringify(status, null, 2))}</pre></section>
   <section class="card" style="margin-top:24px"><h2>Recent Events</h2><table><thead><tr><th>Time</th><th>Event</th><th>Phase</th><th>Message</th></tr></thead><tbody>${eventRows || '<tr><td colspan="4">No events recorded yet.</td></tr>'}</tbody></table></section>
 </main>
 </body>
 </html>
 `
+}
+
+function listVisualEvidence(rootDir: string) {
+  const dir = resolve(rootDir, '.pipeline/visual-evidence')
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
+    .filter(name => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(name))
+    .sort()
+    .map(name => ({ name, path: `.pipeline/visual-evidence/${name}` }))
+}
+
+function renderVisualEvidence(items: Array<{ name: string; path: string }>) {
+  if (!items.length) return '<p>No visual evidence recorded yet.</p>'
+  return `<div class="grid">${items.map(item => `<figure><img src="visual-evidence/${escapeHtml(item.name)}" alt="${escapeHtml(item.name)}" style="max-width:100%;border:2px solid var(--line)" /><figcaption><code>${escapeHtml(item.path)}</code></figcaption></figure>`).join('')}</div>`
 }
 
 function escapeHtml(value: string) {

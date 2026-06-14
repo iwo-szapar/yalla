@@ -80,6 +80,9 @@ A run leaves a trail under `.pipeline/` so a reviewer can decide where to look c
 - `classification.json` — task type, risk tier, evidence mode, gates armed.
 - `events.jsonl` — append-only run timeline: phase starts, tool/command notes, human decisions, checkpoints, and ship events.
 - `checkpoints/` + `latest-checkpoint.json` — resumable save points after classify, plan, each work slice, test, review, and ship.
+- `goal-contract.json` — desired end state, success criteria, constraints, budget, forbidden shortcuts, and required evidence.
+- `evaluator-results.json` / `loop-state.json` — independent evaluator verdicts and long-running loop decisions.
+- `visual-evidence/` / `benchmarks.json` — optional screenshot, image, and benchmark evidence rendered into the local report.
 - `acceptance-trace.json` — every criterion, its proof mode, and its evidence status.
 - `test-evidence.json` — commands run, pass/fail, falsifiable claim verdicts, smoke evidence.
 - `review-results.json` — each binary check and its verdict.
@@ -205,10 +208,14 @@ Operator run-control helpers are also available from the cloned repo:
 
 ```bash
 npm run yalla:run -- doctor
+npm run yalla:run -- goal --message "Ship a verified healthcheck" --criterion "returns 200" --evidence "npm test"
 npm run yalla:run -- event --event stage.started --phase plan --message "Planning started"
 npm run yalla:run -- checkpoint --phase test --message "Focused tests passed"
+npm run yalla:run -- evaluate --evaluator reviewer --verdict PASS --message "Evidence is sufficient"
+npm run yalla:run -- loop
 npm run yalla:run -- status
 npm run yalla:run -- report
+npm run yalla:run -- mine-sessions
 npm run yalla:run -- resume
 npm run yalla:run -- rewind --target plan
 npm run yalla:run -- export
