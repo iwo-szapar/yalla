@@ -81,6 +81,21 @@ How aggressively to scope each kind of work: `EXPANSION` (greenfield, new struct
 
 The `autopilot` section documents whether this repo is allowed to run report-only or unattended loops. Keep `enabled: false` and `level: L0` until the queue dry-run works and the checklist in [`docs/autopilot/readiness-checklist.md`](docs/autopilot/readiness-checklist.md) passes. Autopilot uses the same labels described in the task-system onboarding doc.
 
+### Memory (optional)
+
+The `memory` section wires an optional durable-directive store into the pipeline: Phase 0b recalls relevant past directives *before* planning, and the compound phase persists new ones *after* a run proves out. It is **off unless you define the block**, and is independent of `tracking_mode` — you can track tasks in GitHub Issues yet recall learnings from a project store.
+
+```yaml
+memory:
+  recall_enabled: true
+  save_enabled: true
+  recall_tool: "mcp__supabase__execute_sql"   # the MCP tool that runs the query
+  save_tool: "mcp__supabase__execute_sql"
+  tags_namespace: ["yalla", "your-repo"]       # every recall filters and every save tags with these
+```
+
+Recall is read-only and never blocks a run — a missing or failed store is a skipped phase, not a halt. Saves apply the **directive test** (a learning must be pasteable into Phase 0 and immediately change how an agent plans) and dual-write to the store *and* `docs/learnings/`. The optional `memory-routing-check` review gate enforces that durable knowledge lands in the store rather than scattered files. Full protocol, schema, and `recall_query`/`save_query` overrides are in [`knowledge/yalla/MEMORY-PROTOCOL.md`](knowledge/yalla/MEMORY-PROTOCOL.md) and [`knowledge/yalla/SQL-TEMPLATES.md`](knowledge/yalla/SQL-TEMPLATES.md).
+
 ## How task classification routes ceremony
 
 Before planning, Phase 0 classifies the task and that classification decides how much process the run carries. You don't configure this directly — it's driven by the task description, your domain mapping, and your scope defaults — but understanding it explains why two runs feel so different:

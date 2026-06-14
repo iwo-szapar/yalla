@@ -94,7 +94,7 @@ The pipeline engine is generic — what makes a run *yours* is the knowledge bas
 - **Review checks** ([`REVIEW-CHECKS.md`](knowledge/yalla/REVIEW-CHECKS.md)) — the binary pass/fail library, including a risk-gate set (payments, migrations, auth, async, email, generated artifacts, UI) that arms only when the diff touches that subsystem.
 - **Project checks, task classification, test seams, vertical slices, architecture depth, diagnosis** — the methodology files that tell the agents *how* to plan, build, and verify.
 
-It's also a **closed loop**: the **compound** phase routes each run's learnings back into the knowledge base and your `YALLA.md` gotchas, so the same mistake doesn't recur — the pipeline gets sharper the more you run it. A mature config (see [`examples/sbf/`](examples/sbf/)) carries a couple dozen earned gotchas and a full risk-gate map.
+It's also a **closed loop**: the **compound** phase routes each run's learnings back into the knowledge base and your `YALLA.md` gotchas, so the same mistake doesn't recur — the pipeline gets sharper the more you run it. A mature config (see [`examples/sbf/`](examples/sbf/)) carries a couple dozen earned gotchas and a full risk-gate map. An optional [**memory**](knowledge/yalla/MEMORY-PROTOCOL.md) subsystem can also persist those learnings to a project store and recall them before planning (off by default; enabled per-repo via a `memory:` block in `YALLA.md`).
 
 ## Why binary review
 
@@ -134,7 +134,7 @@ The queue dry-run ranks eligible issues with the `yalla-ready` label, skips bloc
 /plugin install yalla
 ```
 
-This installs the full engine — all 5 skills, 4 agents, and the 14-file knowledge base (the skills load it from the plugin via `${CLAUDE_PLUGIN_ROOT}`). The only thing you add to your own repo is a project config:
+This installs the full engine — all 5 skills, 4 agents, and the 15-file knowledge base (the skills load it from the plugin via `${CLAUDE_PLUGIN_ROOT}`). The only thing you add to your own repo is a project config:
 
 ```bash
 # from your project root — create .claude/YALLA.md and edit it
