@@ -44,6 +44,30 @@ const DEFAULT_LABELS = [
   { name: 'p2', color: 'FBCA04', description: 'Normal priority' },
 ]
 
+const CANONICAL_RISK_GATES = new Set([
+  'security-check',
+  'correctness-check',
+  'test-evidence-check',
+  'reviewability-check',
+  'intended-vs-implemented-check',
+  'complexity-check',
+  'slop-check',
+  'architecture-check',
+  'architecture-docs-check',
+  'architecture-depth-check',
+  'cross-platform-check',
+  'voice-check',
+  'async-reliability-check',
+  'schema-migration-check',
+  'identity-routing-check',
+  'payment-integrity-check',
+  'email-delivery-check',
+  'generated-artifact-check',
+  'ui-journey-check',
+  'operator-understanding-check',
+  'memory-routing-check',
+])
+
 export type OnboardResult = {
   exitCode: number
   checks?: Check[]
@@ -105,6 +129,7 @@ async function runCheck(rootDir: string, loadedConfig: LoadedYallaConfig, comman
   checks.push(commandCheck('commands.build', config.commands.build))
   checks.push(commandCheck('commands.lint', config.commands.lint))
   checks.push({ name: 'test_dir', status: config.testDir && existsSync(resolve(rootDir, config.testDir)) ? 'pass' : 'warn', detail: config.testDir ?? 'Missing test_dir' })
+  checks.push(riskGateCheck(config.riskGates.map(gate => gate.name).filter(Boolean)))
   checks.push({ name: 'autopilot_default', status: config.autopilot.enabled ? 'warn' : 'pass', detail: config.autopilot.enabled ? 'Autopilot enabled; confirm readiness checklist passed' : 'Autopilot disabled by default' })
 
   const auth = await commandRunner('gh', ['auth', 'status'])
@@ -125,6 +150,19 @@ function commandCheck(name: string, value: string | undefined): Check {
   if (value === '') return { name, status: 'warn', detail: 'Gate intentionally skipped' }
   if (value) return { name, status: 'pass', detail: value }
   return { name, status: 'fail', detail: 'Missing command or explicit empty string' }
+}
+
+function riskGateCheck(names: string[]): Check {
+  if (!names.length) return { name: 'risk_gates', status: 'warn', detail: 'No risk gates configured' }
+  const unknown = names.filter(name => !CANONICAL_RISK_GATES.has(name))
+  if (unknown.length) {
+    return {
+      name: 'risk_gates',
+      status: 'fail',
+      detail: `Unknown risk gate(s): ${unknown.join(', ')}. Check names against knowledge/yalla/REVIEW-CHECKS.md`,
+    }
+  }
+  return { name: 'risk_gates', status: 'pass', detail: `${names.length} canonical risk gate(s) configured` }
 }
 
 async function runLabels(_rootDir: string, loadedConfig: LoadedYallaConfig, commandRunner: CommandRunner, apply: boolean): Promise<OnboardResult> {

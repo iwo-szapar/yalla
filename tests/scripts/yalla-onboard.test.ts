@@ -29,6 +29,9 @@ task_system:
 autopilot:
   enabled: false
   level: L0
+risk_gates:
+  - name: payment-integrity-check
+    triggers_on: [payments]
 `
   )
 }
@@ -49,6 +52,36 @@ describe('scripts/yalla-onboard.ts', () => {
 
     expect(result.exitCode).toBe(0)
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'config', status: 'pass' }), expect.objectContaining({ name: 'github_labels', status: 'pass' })]))
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'risk_gates', status: 'pass' })]))
+  })
+
+  it('fails onboarding when a configured risk gate is not canonical', async () => {
+    const root = tempRoot()
+    mkdirSync(join(root, 'tests'))
+    writeConfig(root, `repo: "owner/repo"
+base_branch: main
+tracking_mode: github
+test_dir: tests/
+commands:
+  test: "npm test"
+  typecheck: "npm run typecheck"
+  build: "npm run build"
+  lint: "npm run lint"
+risk_gates:
+  - name: generated-artifacts-check
+    triggers_on: [repo-generator]
+`)
+    const result = await runYallaOnboard({
+      command: 'check',
+      rootDir: root,
+      commandRunner: async (_command, args) => {
+        if (args[0] === 'auth') return { stdout: 'logged in', stderr: '', exitCode: 0 }
+        return { stdout: JSON.stringify([]), stderr: '', exitCode: 0 }
+      },
+    })
+
+    expect(result.exitCode).toBe(1)
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'risk_gates', status: 'fail', detail: expect.stringContaining('generated-artifacts-check') })]))
   })
 
   it('labels dry-run reports missing create commands without mutation', async () => {

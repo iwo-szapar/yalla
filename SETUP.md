@@ -5,7 +5,7 @@ Get Yalla running in your repo in about five minutes.
 ## Prerequisites
 
 - **[Claude Code](https://claude.com/claude-code)** — Yalla is a set of skills and agents that run inside it.
-- **[GitHub CLI](https://cli.github.com)** — run `gh auth login` once. Yalla uses it to create issues and open PRs. If you skip this, Yalla falls back to file-only tracking (see below).
+- **[GitHub CLI](https://cli.github.com)** — run `gh auth login` once. Yalla uses it to create issues and open PRs. If you skip this while `tracking_mode: github`, Yalla halts; use `tracking_mode: file-only` only when you deliberately do not want GitHub tracking.
 - **git** — you're shipping branches and PRs, so a normal git repo with a remote.
 - **Node 20+** — only if you want to run the eval harness (`eval/yalla/`). The pipeline itself doesn't need it; your project's own toolchain does.
 
@@ -141,12 +141,12 @@ You don't need any of this to use Yalla day to day. It's there to keep the proof
 Set `tracking_mode` in `YALLA.md`.
 
 - **`github`** (default) — GitHub Issues are the canonical task store. Each run is an `issue-###`. Recommended; survives across machines and is visible to your whole team.
-- **`file-only`** — no external store. State lives in `.pipeline-state.json` and `plans/`. This is also the automatic fallback when `gh` isn't authenticated. Good for private experiments or repos without a GitHub remote.
+- **`file-only`** — no external store. State lives in `.pipeline-state.json` and `plans/`. Use this deliberately for private experiments or repos without a GitHub remote.
 - **`db`** — advanced. A SQL task table backs the run. See `knowledge/yalla/SQL-TEMPLATES.md`. Only reach for this if you already run a project tracker in Postgres and want Yalla to write to it.
 
 ## Troubleshooting
 
-**`gh` not authenticated** — Yalla drops to file-only tracking. If you wanted GitHub issues and PRs, run `gh auth login` and re-run. Confirm with `gh auth status`.
+**`gh` not authenticated** — GitHub tracking halts because the issue is the canonical work record. Run `gh auth login` and re-run. If you intentionally want local-only tracking, set `tracking_mode: file-only` in `YALLA.md`.
 
 **"No test command" / tests don't run** — your `commands.test` in `YALLA.md` is empty or wrong. Set it to the exact command you run by hand (e.g. `npm test`, `pytest`, `go test ./...`). If your project genuinely has no tests, leave it `""` — the test gate is skipped, but you lose the safety net and most runs will land `INCONCLUSIVE` instead of `PROVEN`.
 

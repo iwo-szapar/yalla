@@ -33,17 +33,26 @@ gh auth status
   ```
 - Task IDs are `issue-###`, where `###` is the GitHub issue number. `gh issue create` / `gh issue view` / `gh pr create` work normally.
 
-**If `gh` is NOT authenticated** (or unavailable):
+**If `gh` is NOT authenticated** (or unavailable) and `tracking_mode` is `github`:
 
-- Fall back to file-only mode and inform the user:
+- Halt and inform the user:
   ```
-  GitHub CLI not authenticated. Falling back to file-only tracking.
+  GitHub CLI not authenticated. GitHub tracking is configured, so Yalla cannot create or resume the canonical issue.
+
+  To continue with GitHub tracking, run `gh auth login`.
+  To intentionally run without GitHub, set `tracking_mode: file-only` in .claude/YALLA.md and re-run.
+  ```
+- Do not create a local issue ID or plan file in this mode.
+
+**If `tracking_mode` is `file-only`:**
+
+- Inform the user:
+  ```
+  Running in configured file-only tracking mode.
 
   Task state: .pipeline-state.json
   Plan:       plans/active/issue-###-slug.md
   Learnings:  docs/learnings/ (if the directory exists)
-
-  To enable GitHub tracking, run `gh auth login`.
   ```
 - Set `tracking_mode: "file-only"` and `github_available: false`.
 - Skip `gh issue create` / `gh pr create` steps.
@@ -51,7 +60,7 @@ gh auth status
   ```bash
   ls plans/active/issue-*.md 2>/dev/null | grep -oE 'issue-[0-9]+' | sort -t- -k2 -n | tail -1
   ```
-  If no plans exist, start at `issue-0001`. A local plan file is allowed only after a unit of work is identified.
+  If no plans exist, start at `issue-0001`. A local plan file is allowed only when file-only mode was configured explicitly.
 
 ## Step 3: Resolve base branch
 

@@ -199,7 +199,7 @@ That's the whole adaptation. No code changes. See [`CUSTOMIZING.md`](CUSTOMIZING
 /yalla issue-123                resume an interrupted run
 ```
 
-Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`). If `gh` is unavailable, Yalla falls back to file-only tracking.
+Requires the [GitHub CLI](https://cli.github.com) (`gh auth login`) for default GitHub tracking. If you intentionally want no GitHub issue/PR workflow, set `tracking_mode: file-only` in `.claude/YALLA.md`.
 
 ## Components
 
