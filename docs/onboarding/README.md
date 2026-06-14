@@ -12,6 +12,7 @@ Required:
 - `.claude/YALLA.md` copied from `YALLA.example.md` and edited for your repo.
 - Working project commands for install, test, typecheck, build, and lint, or explicit `""` values for gates you do not have.
 - Optional model routing hints for classify, plan, implement, test, review, and summarize.
+- Optional verifier registry entries for deterministic commands, visual evidence, benchmarks, and fuzzy evaluator checks.
 - Test layout fields so the tester knows where tests belong.
 - At least three project gotchas that a new contributor would otherwise miss.
 - A small set of risk gates that match subsystems your repo actually has.
@@ -63,6 +64,7 @@ Open `.claude/YALLA.md` and fill these sections in this order:
 - `commands.test` - exact test command. Do not guess. If this is wrong, most runs become `INCONCLUSIVE`.
 - `commands.typecheck`, `commands.build`, `commands.lint` - exact commands or `""`.
 - `models` - optional phase-level routing hints. Valid keys are `classify`, `plan`, `implement`, `test`, `review`, and `summarize`.
+- `verifiers` - optional proof commands or artifact paths. Common keys are `api`, `ui`, `perf`, `docs`, `visual`, and `benchmark`.
 - `test_dir`, `test_file_glob`, `test_setup_file` - match existing conventions.
 - `tracking_mode` - use `github` unless you intentionally need `file-only` or `db`.
 - `domains` - map your team's words to subsystems. Use words that appear in issue titles.
@@ -92,6 +94,11 @@ models:
   test: "sonnet"
   review: "opus"
   summarize: "cheap"
+
+verifiers:
+  api: "npm test"
+  ui: "npm run test:e2e"
+  visual: ".pipeline/visual-evidence/"
 
 test_dir: tests/
 test_file_glob: "**/*.test.*"

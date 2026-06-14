@@ -32,6 +32,7 @@ Also gather when present:
 - Plan JSON: `plans/active/issue-###.plan.json`
 - Pipeline artifacts: `.pipeline/classification.json`, `.pipeline/diagnosis.json`, `.pipeline/acceptance-trace.json`, `.pipeline/test-evidence.json`, `.pipeline/review-results.json`, `.pipeline/ship-manifest.json`
 - Operator artifacts: `.pipeline/events.jsonl`, `.pipeline/latest-checkpoint.json`, `.pipeline/checkpoints/`, `.pipeline/report.html`
+- Long-running control artifacts: `.pipeline/goal-contract.json`, `.pipeline/evaluator-results.json`, `.pipeline/loop-state.json`, `.pipeline/session-mining-report.json`, `.pipeline/visual-evidence/`, `.pipeline/benchmarks.json`
 - Export bundle: `.pipeline/export-*` when `npm run yalla:run -- export` was used for a portable audit snapshot
 - Git diff/stat from the PR or branch: `git log "$BASE_BRANCH"..session/issue-###-* --stat` if branch still exists
 - Learnings: `docs/learnings/` entries referencing `issue-###`

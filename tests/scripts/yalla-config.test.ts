@@ -26,6 +26,14 @@ commands:
   test: "npm test"
   typecheck: ""
 
+models:
+  classify: "cheap"
+  review: "opus"
+
+verifiers:
+  api: "npm test"
+  visual: ".pipeline/visual-evidence/"
+
 task_system:
   ready_label: ready-for-ai
   block_labels: [blocked, needs-human]
@@ -37,6 +45,9 @@ autopilot:
   level: L0
   human_mode: strict
   block_labels: [do-not-autopilot]
+  max_iterations: 4
+  max_runtime_minutes: 60
+  token_budget: "100k"
   auto_merge: false
 
 evals:
@@ -47,10 +58,15 @@ evals:
     expect(config.repo).toBe('example/repo')
     expect(config.commands.test).toBe('npm test')
     expect(config.commands.typecheck).toBe('')
+    expect(config.models.review).toBe('opus')
+    expect(config.verifiers.api).toBe('npm test')
     expect(config.taskSystem.readyLabel).toBe('ready-for-ai')
     expect(config.taskSystem.blockLabels).toEqual(['blocked', 'needs-human'])
     expect(config.autopilot.eligibleLabels).toEqual(['ready-for-ai'])
     expect(config.autopilot.blockLabels).toEqual(['do-not-autopilot'])
+    expect(config.autopilot.maxIterations).toBe(4)
+    expect(config.autopilot.maxRuntimeMinutes).toBe(60)
+    expect(config.autopilot.tokenBudget).toBe('100k')
     expect(config.autopilot.enabled).toBe(false)
     expect(config.evals.projectFixturesRequiredBeforeAutopilot).toBe(true)
   })

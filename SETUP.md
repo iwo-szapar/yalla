@@ -72,6 +72,7 @@ npm run yalla:onboard -- init --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- labels --dry-run --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:onboard -- template --dry-run --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:run -- doctor --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- goal --config /path/to/your-project/.claude/YALLA.md --message "Ship a verified small change" --criterion "tests pass" --evidence "npm test"
 ```
 
 ## First-run config
@@ -81,9 +82,10 @@ Open `.claude/YALLA.md` and set these things. Everything else has sane defaults.
 1. **base_branch** — what PRs target. `main`, `develop`, `staging`, whatever you cut work from.
 2. **commands** — your real `test` / `typecheck` / `build` / `lint` commands. Set any to `""` to skip that gate (a Python project might have no `typecheck`).
 3. **models** — optional phase-level model hints (`classify`, `plan`, `implement`, `test`, `review`, `summarize`) so cost/quality routing is visible in doctor/status/report output.
-4. **test_dir** — where tests live, so the tester puts new tests in the right place.
-5. **gotchas** — the non-obvious rules a new contributor trips on. This is your project's scar tissue. Start with two or three real ones; you'll add more as the pipeline catches mistakes.
-6. **risk_gates** — which subsystem checks to arm (payments, migrations, async, auth, …). Only the ones that match your stack.
+4. **verifiers** — optional proof commands or artifact locations (`api`, `ui`, `perf`, `docs`, `visual`, etc.) so success evidence is explicit before long-running loops.
+5. **test_dir** — where tests live, so the tester puts new tests in the right place.
+6. **gotchas** — the non-obvious rules a new contributor trips on. This is your project's scar tissue. Start with two or three real ones; you'll add more as the pipeline catches mistakes.
+7. **risk_gates** — which subsystem checks to arm (payments, migrations, async, auth, …). Only the ones that match your stack.
 
 That's the whole adaptation. No code changes. The deeper "how do I fit this to my project" guidance lives in [CUSTOMIZING.md](CUSTOMIZING.md).
 
@@ -115,12 +117,15 @@ For local run observability from the cloned Yalla repo:
 ```bash
 npm run yalla:run -- event --config /path/to/your-project/.claude/YALLA.md --event stage.started --phase plan --message "Planning started"
 npm run yalla:run -- checkpoint --config /path/to/your-project/.claude/YALLA.md --phase test --message "Focused tests passed"
+npm run yalla:run -- evaluate --config /path/to/your-project/.claude/YALLA.md --evaluator reviewer --verdict PASS --message "Evidence is sufficient"
+npm run yalla:run -- loop --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:run -- status --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:run -- report --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- mine-sessions --config /path/to/your-project/.claude/YALLA.md
 npm run yalla:run -- export --config /path/to/your-project/.claude/YALLA.md
 ```
 
-These helpers write `.pipeline/events.jsonl`, `.pipeline/checkpoints/*`, `.pipeline/latest-checkpoint.json`, `.pipeline/report.html`, and optional `.pipeline/export-*` bundles. `resume` and `rewind` return instructions only; they do not run destructive Git commands.
+These helpers write `.pipeline/goal-contract.json`, `.pipeline/events.jsonl`, `.pipeline/checkpoints/*`, `.pipeline/latest-checkpoint.json`, `.pipeline/evaluator-results.json`, `.pipeline/loop-state.json`, `.pipeline/session-mining-report.json`, `.pipeline/report.html`, and optional `.pipeline/export-*` bundles. `resume` and `rewind` return instructions only; they do not run destructive Git commands.
 
 To resume an interrupted run:
 

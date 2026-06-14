@@ -37,6 +37,17 @@ models:
   review: "opus"                # independent high-rigor review when available
   summarize: "cheap"            # PR/report summaries
 
+## Verifiers (optional)
+
+# Project-specific proof commands or artifact locations. These are planning and
+# reporting hints; agents still run the relevant commands and record evidence.
+verifiers:
+  api: "npm test"
+  ui: "npm run test:e2e"
+  perf: "npm run benchmark"
+  docs: "npm run docs:check"
+  visual: ".pipeline/visual-evidence/"
+
 ## Test Layout
 
 # Where tests live and how they're named — the tester agent matches these.
@@ -76,6 +87,7 @@ autopilot:
   eligible_labels: [yalla-ready]
   block_labels: [blocked, needs-human, do-not-autopilot]
   max_risk_tier: low
+  max_iterations: 3
   max_files_changed: 12
   max_runtime_minutes: 45
   token_budget: "repo-defined"

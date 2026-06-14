@@ -9,6 +9,7 @@ export type YallaConfig = {
   testDir?: string
   commands: Record<string, string>
   models: Record<string, string>
+  verifiers: Record<string, string>
   taskSystem: {
     readyLabel?: string
     blockLabels: string[]
@@ -23,6 +24,9 @@ export type YallaConfig = {
     eligibleLabels: string[]
     blockLabels: string[]
     autoMerge?: boolean
+    maxRuntimeMinutes?: number
+    maxIterations?: number
+    tokenBudget?: string
   }
   evals: {
     smokeCommand?: string
@@ -50,6 +54,7 @@ export function inferConfigRoot(configPath: string) {
 const DEFAULT_CONFIG: YallaConfig = {
   commands: {},
   models: {},
+  verifiers: {},
   taskSystem: {
     blockLabels: [],
     priorityLabels: [],
@@ -91,6 +96,7 @@ function cloneDefaultConfig(): YallaConfig {
   return {
     commands: {},
     models: {},
+    verifiers: {},
     taskSystem: { blockLabels: [], priorityLabels: [], riskLabels: [] },
     autopilot: { eligibleLabels: [], blockLabels: [] },
     evals: {},
@@ -172,6 +178,7 @@ function applyNested(config: YallaConfig, parent: string, key: string, rawValue:
   const value = parseScalar(rawValue)
   if (parent === 'commands') config.commands[key] = String(value ?? '')
   else if (parent === 'models') config.models[key] = String(value ?? '')
+  else if (parent === 'verifiers') config.verifiers[key] = String(value ?? '')
   else if (parent === 'task_system') applyTaskSystem(config, key, value)
   else if (parent === 'autopilot') applyAutopilot(config, key, value)
   else if (parent === 'evals') applyEvals(config, key, value)
@@ -192,6 +199,9 @@ function applyAutopilot(config: YallaConfig, key: string, value: unknown) {
   else if (key === 'eligible_labels') config.autopilot.eligibleLabels = arrayValue(value)
   else if (key === 'block_labels') config.autopilot.blockLabels = arrayValue(value)
   else if (key === 'auto_merge') config.autopilot.autoMerge = booleanValue(value)
+  else if (key === 'max_runtime_minutes') config.autopilot.maxRuntimeMinutes = numberValue(value)
+  else if (key === 'max_iterations') config.autopilot.maxIterations = numberValue(value)
+  else if (key === 'token_budget') config.autopilot.tokenBudget = stringValue(value)
 }
 
 function applyEvals(config: YallaConfig, key: string, value: unknown) {
@@ -236,6 +246,11 @@ function arrayValue(value: unknown) {
 
 function booleanValue(value: unknown) {
   return value === true || value === 'true'
+}
+
+function numberValue(value: unknown) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 function normalizeConfig(config: YallaConfig): YallaConfig {

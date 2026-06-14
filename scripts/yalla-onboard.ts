@@ -69,6 +69,9 @@ const CANONICAL_RISK_GATES = new Set([
   'memory-routing-check',
 ])
 
+const CANONICAL_MODEL_ROUTES = new Set(['classify', 'plan', 'implement', 'test', 'review', 'summarize'])
+const CANONICAL_VERIFIERS = new Set(['api', 'ui', 'perf', 'docs', 'research', 'visual', 'benchmark', 'security', 'accessibility'])
+
 export type OnboardResult = {
   exitCode: number
   checks?: Check[]
@@ -130,6 +133,7 @@ async function runCheck(rootDir: string, loadedConfig: LoadedYallaConfig, comman
   checks.push(commandCheck('commands.build', config.commands.build))
   checks.push(commandCheck('commands.lint', config.commands.lint))
   checks.push(modelRoutingCheck(config.models))
+  checks.push(verifierRegistryCheck(config.verifiers))
   checks.push({ name: 'test_dir', status: config.testDir && existsSync(resolve(rootDir, config.testDir)) ? 'pass' : 'warn', detail: config.testDir ?? 'Missing test_dir' })
   checks.push(riskGateCheck(config.riskGates.map(gate => gate.name).filter(Boolean)))
   checks.push({ name: 'autopilot_default', status: config.autopilot.enabled ? 'warn' : 'pass', detail: config.autopilot.enabled ? 'Autopilot enabled; confirm readiness checklist passed' : 'Autopilot disabled by default' })
@@ -170,10 +174,17 @@ function riskGateCheck(names: string[]): Check {
 function modelRoutingCheck(models: Record<string, string>): Check {
   const keys = Object.keys(models)
   if (!keys.length) return { name: 'model_routing', status: 'warn', detail: 'No models block configured; default Claude Code model will be used for all phases' }
-  const allowed = new Set(['classify', 'plan', 'implement', 'test', 'review', 'summarize'])
-  const unknown = keys.filter(key => !allowed.has(key))
+  const unknown = keys.filter(key => !CANONICAL_MODEL_ROUTES.has(key))
   if (unknown.length) return { name: 'model_routing', status: 'fail', detail: `Unknown model route(s): ${unknown.join(', ')}` }
   return { name: 'model_routing', status: 'pass', detail: keys.map(key => `${key}=${models[key]}`).join(', ') }
+}
+
+function verifierRegistryCheck(verifiers: Record<string, string>): Check {
+  const keys = Object.keys(verifiers)
+  if (!keys.length) return { name: 'verifier_registry', status: 'warn', detail: 'No verifiers block configured; agents must infer proof commands from project context' }
+  const unknown = keys.filter(key => !CANONICAL_VERIFIERS.has(key))
+  if (unknown.length) return { name: 'verifier_registry', status: 'fail', detail: `Unknown verifier route(s): ${unknown.join(', ')}` }
+  return { name: 'verifier_registry', status: 'pass', detail: keys.map(key => `${key}=${verifiers[key]}`).join(', ') }
 }
 
 async function runLabels(_rootDir: string, loadedConfig: LoadedYallaConfig, commandRunner: CommandRunner, apply: boolean): Promise<OnboardResult> {

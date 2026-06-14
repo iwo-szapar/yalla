@@ -8,6 +8,7 @@
 - Add portable run export bundles under `.pipeline/export-*`.
 - Add optional `models:` phase-routing hints to `YALLA.md` and validate them during onboarding/doctor checks.
 - Accept `doc-alignment-check` as a canonical onboarding risk gate so the seeded example config passes first-run validation.
+- Add long-running control artifacts and commands: goal contracts, verifier registry, evaluator results, loop-state decisions, session mining, visual evidence slots, and budget telemetry.
 
 ## 1.2.0
 

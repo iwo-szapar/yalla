@@ -39,6 +39,21 @@ models:
 
 Yalla treats these as validated hints rather than a hard runtime dependency. Some Claude Code/plugin hosts may ignore explicit model switching, but the config still matters: `npm run yalla:run -- doctor`, onboarding checks, status, and reports surface the intended cost/quality posture. Keep the keys to `classify`, `plan`, `implement`, `test`, `review`, and `summarize`; unknown keys fail onboarding so typos do not silently drift.
 
+### Verifiers
+
+The optional `verifiers:` block documents what proves success for each class of work:
+
+```yaml
+verifiers:
+  api: "npm test -- tests/api"
+  ui: "npm run test:e2e"
+  perf: "npm run benchmark"
+  docs: "npm run docs:check"
+  visual: ".pipeline/visual-evidence/"
+```
+
+These entries are planning/reporting hints. They make the verifier boundary explicit before a long-running loop starts, but they do not execute automatically. The agent still runs the appropriate command, saves the output, and maps it to the goal contract. See [`knowledge/yalla/VERIFIERS.md`](knowledge/yalla/VERIFIERS.md).
+
 ### Test Layout
 
 `test_dir`, `test_file_glob`, `test_setup_file`. This tells the tester where to put new tests and how your existing ones are named, so generated tests match your conventions instead of inventing their own structure.
@@ -162,6 +177,17 @@ npm run yalla:run -- export --config /path/to/your-project/.claude/YALLA.md
 ```
 
 These helpers are intentionally local-first. They write `.pipeline/events.jsonl`, `.pipeline/checkpoints/*`, `.pipeline/latest-checkpoint.json`, `.pipeline/report.html`, and portable `.pipeline/export-*` bundles. `rewind` identifies the checkpoint to inspect; it does not reset branches or delete work. That keeps Yalla's recovery path explicit and prevents automation from hiding destructive Git operations behind a friendly command.
+
+For long-running autonomy, add these artifacts before or during the loop:
+
+```bash
+npm run yalla:run -- goal --config /path/to/your-project/.claude/YALLA.md --message "Desired end state" --criterion "Measurable success" --constraint "Do not break X" --evidence "npm test"
+npm run yalla:run -- evaluate --config /path/to/your-project/.claude/YALLA.md --evaluator reviewer --verdict PASS --message "Evidence is sufficient"
+npm run yalla:run -- loop --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- mine-sessions --config /path/to/your-project/.claude/YALLA.md
+```
+
+`goal` writes `.pipeline/goal-contract.json`. `evaluate` writes `.pipeline/evaluator-results.json` and keeps evaluator judgment separate from executor changes. `loop` writes `.pipeline/loop-state.json` with the next non-destructive instruction. `mine-sessions` writes `.pipeline/session-mining-report.json` with suggested gotchas, project checks, or eval fixtures based on repeated failures.
 
 ## How binary review works
 

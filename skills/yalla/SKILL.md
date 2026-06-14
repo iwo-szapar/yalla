@@ -48,7 +48,9 @@ If empty, ask "What are we building?" Do not proceed without a clear description
 - Do not invent a parallel ID scheme for new work; reference issues by `issue-###`.
 - If GitHub CLI is unavailable, halt and ask the user to run `gh auth login`. (An optional SQL task store is described in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SQL-TEMPLATES.md`; only use it if `.claude/YALLA.md` sets `tracking_mode: db`.)
 - Every run must produce `.pipeline/outcome-evaluation.json` before shipping.
+- Every non-tiny run must start from `.pipeline/goal-contract.json` or an equivalent issue body section that names desired end state, success criteria, constraints, budget, forbidden shortcuts, and required evidence. Use `npm run yalla:run -- goal ...` when the cloned Yalla repo is available.
 - Every non-tiny run must append structured lifecycle entries to `.pipeline/events.jsonl` and write checkpoints after classify, plan, each meaningful work slice, test, review, and ship. Use `npm run yalla:run -- event ...` and `npm run yalla:run -- checkpoint ...` when the cloned Yalla repo is available.
+- Executor and evaluator roles are separate. The evaluator reads goal/evidence/diff and writes `.pipeline/evaluator-results.json`; it does not implement its own fixes.
 - Before shipping, generate or refresh `.pipeline/report.html` with `npm run yalla:run -- report` when the run produced meaningful evidence artifacts.
 - Only verdict `PROVEN` may be described as done, complete, ready to merge, or safe for autopilot progression.
 - Verdicts `NOT_PROVEN` and `INCONCLUSIVE` are honest outcomes, not success states.
@@ -66,6 +68,7 @@ Read these on demand. They are the source of truth for the upgraded pipeline:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md` — behavior tests through public interfaces
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md` — deep-module/locality review vocabulary
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` — evidence schemas and artifact commit policy
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VERIFIERS.md` — verifier selection, goal contracts, evaluator separation, and long-running loop artifacts
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md` — durable issue contract
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md` — universal, risk-triggered, and architecture-doc alignment checks
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/MEMORY-PROTOCOL.md` — optional Phase 0b recall + Phase 5 save, only when `.claude/YALLA.md` sets a `memory:` block
@@ -167,7 +170,8 @@ Classify the task before planning:
    - `applies` if the task changes product behavior, user/admin/operator journeys, GTM/pricing/positioning surfaces, money, access, entitlements, delivery, onboarding, public product pages, generated artifacts, or agent workflows that decide what gets built.
    - `n/a` for tiny hotfixes, isolated tests, dependency/config updates, mechanical refactors, or docs edits that do not define future product behavior. Include a specific reason.
 10. Write `.pipeline/classification.json` and add the same fields to `.pipeline-state.json`.
-11. Record the phase in `.pipeline/events.jsonl` and checkpoint with phase `classify`.
+11. Write or update `.pipeline/goal-contract.json` with success criteria, constraints, budget, forbidden shortcuts, and required evidence.
+12. Record the phase in `.pipeline/events.jsonl` and checkpoint with phase `classify`.
 
 ### Conditional routing
 
