@@ -15,6 +15,7 @@
     "eval:yalla:smoke": "tsx eval/yalla/runner/smoke-runner.ts",
     "yalla:autopilot": "tsx scripts/yalla-autopilot.ts",
     "yalla:onboard": "tsx scripts/yalla-onboard.ts",
+    "yalla:run": "tsx scripts/yalla-run.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "echo \"No e2e suite in the standalone example dataset; UI-journey tests are placeholder fixtures.\" && exit 0"

@@ -23,6 +23,22 @@ Your real `test` / `typecheck` / `build` / `lint` invocations. The pipeline runs
 
 A test command that doesn't exist is the single most common reason a first run feels broken — and without a working test command most runs land `INCONCLUSIVE` instead of `PROVEN`, because the proof contract can't get deterministic evidence. Get these right before anything else.
 
+### Model Routing
+
+The optional `models:` block documents phase-level routing intent:
+
+```yaml
+models:
+  classify: "cheap"
+  plan: "sonnet"
+  implement: "sonnet"
+  test: "sonnet"
+  review: "opus"
+  summarize: "cheap"
+```
+
+Yalla treats these as validated hints rather than a hard runtime dependency. Some Claude Code/plugin hosts may ignore explicit model switching, but the config still matters: `npm run yalla:run -- doctor`, onboarding checks, status, and reports surface the intended cost/quality posture. Keep the keys to `classify`, `plan`, `implement`, `test`, `review`, and `summarize`; unknown keys fail onboarding so typos do not silently drift.
+
 ### Test Layout
 
 `test_dir`, `test_file_glob`, `test_setup_file`. This tells the tester where to put new tests and how your existing ones are named, so generated tests match your conventions instead of inventing their own structure.
@@ -127,6 +143,25 @@ Two knobs scale how heavy the proof apparatus is:
 - `high` — payments, auth, migrations, webhook/job reliability, generated artifacts, security, broad refactors. Stricter review, explicit accepted risks, a reviewer separate from the implementer.
 
 You don't set these per run; classification picks them from the task and your config. Your job is to keep the domain mapping and gotchas honest so the right tier and mode fire on their own.
+
+## Run observability and operator controls
+
+The proof artifacts tell a reviewer whether the work is proven. The operator artifacts tell the maintainer where the run is, how to resume it, and what happened along the way.
+
+From the cloned Yalla repo, use:
+
+```bash
+npm run yalla:run -- doctor --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- event --config /path/to/your-project/.claude/YALLA.md --event stage.started --phase plan --message "Planning started"
+npm run yalla:run -- checkpoint --config /path/to/your-project/.claude/YALLA.md --phase test --message "Focused tests passed"
+npm run yalla:run -- status --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- report --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- resume --config /path/to/your-project/.claude/YALLA.md
+npm run yalla:run -- rewind --config /path/to/your-project/.claude/YALLA.md --target plan
+npm run yalla:run -- export --config /path/to/your-project/.claude/YALLA.md
+```
+
+These helpers are intentionally local-first. They write `.pipeline/events.jsonl`, `.pipeline/checkpoints/*`, `.pipeline/latest-checkpoint.json`, `.pipeline/report.html`, and portable `.pipeline/export-*` bundles. `rewind` identifies the checkpoint to inspect; it does not reset branches or delete work. That keeps Yalla's recovery path explicit and prevents automation from hiding destructive Git operations behind a friendly command.
 
 ## How binary review works
 

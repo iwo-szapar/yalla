@@ -21,6 +21,10 @@ commands:
   typecheck: "npm run typecheck"
   build: "npm run build"
   lint: "npm run lint"
+models:
+  classify: "cheap"
+  implement: "sonnet"
+  review: "opus"
 task_system:
   ready_label: yalla-ready
   block_labels: [blocked, needs-human]
@@ -53,6 +57,7 @@ describe('scripts/yalla-onboard.ts', () => {
     expect(result.exitCode).toBe(0)
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'config', status: 'pass' }), expect.objectContaining({ name: 'github_labels', status: 'pass' })]))
     expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'risk_gates', status: 'pass' })]))
+    expect(result.checks).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'model_routing', status: 'pass' })]))
   })
 
   it('fails onboarding when a configured risk gate is not canonical', async () => {
