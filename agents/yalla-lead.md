@@ -28,6 +28,8 @@ Read `.claude/YALLA.md` first. It defines the repo, `base_branch`, the project `
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md` — universal + risk-triggered project gates.
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PR-BODY-TEMPLATE.md` — commit + PR body format.
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md` — operator-understanding-check criteria for non-trivial work.
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md` — Product Intent routing and plan fields.
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` — product-promise review criteria.
 
 ## Hard Rules
 
@@ -48,6 +50,8 @@ Read `.claude/YALLA.md` first. It defines the repo, `base_branch`, the project `
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` | When deciding what evidence to write/commit |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PR-BODY-TEMPLATE.md` | Phase 5 (shipping) |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SQL-TEMPLATES.md` | Only if `tracking_mode: db` (advanced, optional) |
+| `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md` | When product/GTM/user-flow intent is ambiguous or user-visible promises change |
+| `${CLAUDE_PLUGIN_ROOT}/knowledge/product/INTENDED-VS-IMPLEMENTED.md` | When reviewing product promise against implementation evidence |
 
 ---
 
@@ -59,13 +63,13 @@ Follow `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PREFLIGHT.md`: read `tracking_mode
 
 ### Classify And Track
 
-Classify task type, scope mode (EXPANSION/HOLD/REDUCTION), phase split, risk tier, evidence mode, architecture-doc gate, and merge policy. Create or resume the unit of work (GitHub issue, or a plan-file ID in file-only mode). Create a `session/issue-###-[slug]` branch/worktree from `$BASE_BRANCH`.
+Classify task type, scope mode (EXPANSION/HOLD/REDUCTION), phase split, risk tier, evidence mode, product-intent gate, architecture-doc gate, and merge policy. Product Intent applies when product/GTM/user-flow behavior, pricing/packaging, onboarding promises, access/delivery boundaries, metrics, or user-visible promises change. Create or resume the unit of work (GitHub issue, or a plan-file ID in file-only mode). Create a `session/issue-###-[slug]` branch/worktree from `$BASE_BRANCH`.
 
 For bugs, regressions, and performance issues, run `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/DIAGNOSIS.md` before planning a fix — reproduce the exact symptom in a fast pass/fail loop first.
 
 ### Plan
 
-Use subagents only when they improve the plan. The full team is analyst + architect + spec-validator + red-team; ask each for concise findings, not raw transcripts. Write `plans/active/issue-###-[slug].md` (Problem, Approach, Success Invariant, Risk-Triggered Gates, Architecture Alignment, Files Affected, Vertical Slices, Acceptance Criteria, Test Seams, Edge Cases, Risks). After approval, update the issue (or plan file) with the durable Agent Brief from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`. For non-trivial work, choose `light`, `default`, or `deep` operator-understanding depth and keep the explanation decision-useful rather than ceremonial.
+Use subagents only when they improve the plan. The full team is analyst + architect + spec-validator + red-team; ask each for concise findings, not raw transcripts. Write `plans/active/issue-###-[slug].md` (Problem, Approach, Success Invariant, Product Intent when applicable, Risk-Triggered Gates, Architecture Alignment, Files Affected, Vertical Slices, Acceptance Criteria, Test Seams, Edge Cases, Risks). After approval, update the issue (or plan file) with the durable Agent Brief from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`. For non-trivial work, choose `light`, `default`, or `deep` operator-understanding depth and keep the explanation decision-useful rather than ceremonial.
 
 ### Work And Test
 
@@ -73,11 +77,11 @@ Build in vertical slices. Prefer tester-led failing behavior tests at the highes
 
 ### Review
 
-Use fresh-context review. Each reviewer answers ONE binary question with Pass or Fail. Universal review stays small; run risk-triggered checks only when their triggers apply (`.claude/YALLA.md` `risk_gates` + the plan's `Risk-Triggered Gates`, defined in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md`). Every Fail needs file, exact code, issue, and fix. Scale by priority — P1: ~3 reviewers, P2: ~2, P3: ~1 — always including a success-invariant check for changed workflows. On any Fail, fix then re-run every check that applies to the changed files (a fix for one invariant can break another).
+Use fresh-context review. Each reviewer answers ONE binary question with Pass or Fail. Universal review stays small; run risk-triggered checks only when their triggers apply (`.claude/YALLA.md` `risk_gates` + the plan's `Risk-Triggered Gates`, defined in `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/REVIEW-CHECKS.md`). Run `intended-vs-implemented-check` whenever the product-intent gate applies. Every Fail needs file, exact code, issue, and fix. Scale by priority — P1: ~3 reviewers, P2: ~2, P3: ~1 — always including a success-invariant check for changed workflows. On any Fail, fix then re-run every check that applies to the changed files (a fix for one invariant can break another).
 
 ### Compound And Ship
 
-Capture durable learnings only when they will prevent repeat mistakes (`docs/learnings/YYYY-MM-DD-[topic].md`); update YALLA.md gotchas if the run surfaced a new trap. Open a PR against `$BASE_BRANCH` (via `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PR-BODY-TEMPLATE.md`) with risk tier, reviewer entry points, validation evidence, docs impact, operator-readable summary when applicable, and merge policy. Use `gh pr checks` as the PR-attached CI source of truth. GitHub mode: link/close the issue. File-only mode: skip the issue/PR steps that need `gh`.
+Capture durable learnings only when they will prevent repeat mistakes (`docs/learnings/YYYY-MM-DD-[topic].md`); update YALLA.md gotchas if the run surfaced a new trap. Open a PR against `$BASE_BRANCH` (via `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PR-BODY-TEMPLATE.md`) with risk tier, Product Intent when applicable, reviewer entry points, validation evidence, docs impact, operator-readable summary when applicable, and merge policy. Use `gh pr checks` as the PR-attached CI source of truth. GitHub mode: link/close the issue. File-only mode: skip the issue/PR steps that need `gh`.
 
 ---
 

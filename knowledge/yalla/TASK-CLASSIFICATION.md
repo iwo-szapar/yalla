@@ -15,6 +15,8 @@ Write the classification into `.pipeline/classification.json` and `.pipeline-sta
   "phase_split_required": false,
   "risk_tier": "low|medium|high",
   "evidence_mode": "minimal|standard|strict",
+  "product_intent_gate": "applies|n/a",
+  "product_intent_gate_reason": "...",
   "architecture_doc_gate": "applies|n/a",
   "architecture_doc_gate_reason": "...",
   "base_branch": "main",
@@ -36,6 +38,14 @@ Write the classification into `.pipeline/classification.json` and `.pipeline-sta
 - `state machine`, `data model`, `logic prototype`, `let me play with states`: `logic-prototype`.
 - `hotfix`, `urgent`, `production down`, `security vulnerability`: `hotfix` with REDUCTION mode, diagnosis gate, and incident gate.
 - `docs`, `copy`, `README`, `runbook`: `docs` unless the docs change a public contract that also requires code/test alignment.
+
+## Product Intent Gate
+
+Set `product_intent_gate: "applies"` when the task changes product/GTM/user-flow behavior, pricing/packaging, onboarding promises, access/delivery boundaries, metrics, or copy that makes a user-visible promise.
+
+Set `product_intent_gate: "n/a"` only with a concrete reason, such as `internal refactor preserving public behavior` or `test-only change with no product promise change`.
+
+When the gate applies, the plan must include `Product Intent`, approval must preserve the MVP boundary, and review must run `intended-vs-implemented-check`.
 
 If more than one type matches, choose the riskiest applicable path:
 

@@ -27,6 +27,8 @@ Tiny hotfixes may use minimal evidence mode: no committed `.pipeline/*` artifact
   "phase_split_required": false,
   "risk_tier": "medium",
   "evidence_mode": "standard",
+  "product_intent_gate": "applies|n/a",
+  "product_intent_gate_reason": "Changed onboarding copy and delivery behavior",
   "architecture_doc_gate": "applies|n/a",
   "architecture_doc_gate_reason": "Changed the payment success flow documented in docs/architecture/flows.md",
   "merge_policy": "pr-only"
@@ -90,6 +92,36 @@ Required when the task changes behavior described by `docs/architecture/*`, or w
     }
   ],
   "accepted_risks": []
+}
+```
+
+### `.pipeline/product-intent.json`
+
+Required when Product Intent applies and the intent is non-obvious, review-relevant, or changes money, access, data, privacy, delivery, trust, or product-promise boundaries.
+
+```json
+{
+  "issue_id": "issue-###",
+  "applies": true,
+  "intended_outcome": "User can complete the changed onboarding step without support",
+  "target_user_context": "New customer using the flow for the first time",
+  "metric_or_proxy": "Completion event emitted after the recoverable state is persisted",
+  "mvp_boundary": "Only the existing onboarding route changes; no new admin workflow",
+  "kill_assumptions": [
+    {
+      "assumption": "Existing users can retry after validation errors",
+      "validation": "integration test covers invalid then valid submit",
+      "status": "validated|accepted-risk|blocked"
+    }
+  ],
+  "intended_behavior_claims": [
+    {
+      "claim": "Invalid input never reports success",
+      "evidence": "tests/onboarding-flow.test.ts",
+      "status": "covered|accepted-risk|blocked"
+    }
+  ],
+  "intended_vs_implemented_verdict": "pass|fail|accepted-risk|pending"
 }
 ```
 
@@ -167,6 +199,9 @@ Markdown brief for fresh-context review. Required for non-tiny medium/high-risk 
 
 ## Reviewer Entry Points
 - [Files/flows worth human attention]
+
+## Product Intent
+- [Outcome, metric/proxy, MVP boundary, and intended-vs-implemented verdict when the gate applies]
 
 ## Validation Evidence
 - [Commands, screenshots, traces, transcripts, or accepted gaps]

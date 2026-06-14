@@ -30,6 +30,12 @@ gh pr create --base "$BASE_BRANCH" --title "[issue-###] [description]" --body "$
 ## Risk Tier
 - [low|medium|high] - [why]
 
+## Product Intent
+- Applies: [true|false and why]
+- Outcome/metric: [desired outcome + metric/proxy]
+- MVP scope: [smallest shipped slice]
+- Intended-vs-implemented: [Pass/N/A/accepted risk]
+
 ## Reviewer Entry Points
 - [files/flows worth human attention]
 - [generated/mechanical files that do not need line-by-line review, if any]
@@ -58,6 +64,7 @@ Decision needed from the operator/maintainer:
 - [x] correctness/success-invariant-check: Pass
 - [x] test/evidence-check: Pass
 - [x] reviewability-check: Pass
+- [x] intended-vs-implemented-check: Pass [or N/A with reason]
 - [x] operator-understanding-check: Pass [or N/A for light-mode trivial changes]
 - [x] risk-triggered checks: [list triggered checks + Pass, or N/A with reason]
 
