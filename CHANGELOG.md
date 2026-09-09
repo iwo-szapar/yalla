@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add the Scope Walkthrough: an animated, pre-approval plan map that validates and shows proposed scope, dependencies, non-goals, planned proof, and open questions without misrepresenting planned work as proven.
 - Add `/yalla-show`: optional, smallest-accurate visual explanations of a plan, diff, workflow, decision, or proof gap.
 - Add `knowledge/yalla/VISUAL-EXPLAINABILITY.md` and wire it into Yalla planning and review without allowing diagrams to substitute for deterministic proof.
 - Add a first-class minimum-diff gate (`knowledge/yalla/MINIMUM-DIFF.md`) and wire it into `/yalla` classification, plan templates, and PR summaries.

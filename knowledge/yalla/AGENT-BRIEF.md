@@ -35,6 +35,11 @@ After plan approval, update the unit of work with a durable Agent Brief. In `git
 - Proof plan: [test/browser/API/static/manual evidence for each acceptance criterion]
 - Tracker writeback: [GitHub/Linear state/comment/link behavior]
 
+**Scope Walkthrough:**
+- Gate/verdict: [required|optional|n/a] / [READY_FOR_SCOPE_APPROVAL|N/A]
+- Artifact: [`plans/active/issue-###-scope-walkthrough.html` or `N/A`]
+- Approved boundaries: [proposed path, explicit non-goals, and planned proof]
+
 **Task classification:**
 - Type: [task_type]
 - Scope mode: [EXPANSION|HOLD|REDUCTION]

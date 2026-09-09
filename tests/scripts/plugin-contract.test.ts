@@ -132,6 +132,19 @@ describe('Claude Code plugin contract', () => {
     expect(yallaReviewSkill).toContain('Treat their persisted `required_gates` as a floor')
   })
 
+  it('requires a truthful Scope Walkthrough before complex plan approval', () => {
+    const yallaSkill = readFileSync(join(repoRoot, 'skills/yalla/SKILL.md'), 'utf8')
+    const planSkill = readFileSync(join(repoRoot, 'skills/yalla-plan/SKILL.md'), 'utf8')
+    const showSkill = readFileSync(join(repoRoot, 'skills/yalla-show/SKILL.md'), 'utf8')
+    const scopeContract = readFileSync(join(repoRoot, 'knowledge/yalla/SCOPE-WALKTHROUGH.md'), 'utf8')
+
+    expect(yallaSkill).toContain('Determine `scope_walkthrough_gate`')
+    expect(planSkill).toContain('Scope Walkthrough And User Approval')
+    expect(showSkill).toContain('READY_FOR_SCOPE_APPROVAL')
+    expect(scopeContract).toContain('planned-versus-proven legend')
+    expect(scopeContract).toContain('Do not offer approval in')
+  })
+
   it('validates agent frontmatter and unique names', () => {
     const agentFiles = listFiles(join(repoRoot, 'agents'), (path) => path.endsWith('.md'))
     const names = agentFiles.map((path) => parseFrontmatter(path).name)

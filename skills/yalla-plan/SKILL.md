@@ -16,11 +16,11 @@ Planning must be incident-aware without becoming a universal checklist. Identify
 
 Planning must also be operator-readable for non-trivial work. Apply the operator-understanding protocol (see `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/`) and choose `light`, `default`, or `deep` understanding mode based on risk. The plan should explain the business/user behavior before code details.
 
-When the chosen approach, a cross-boundary flow, or the tradeoff between two
-options would otherwise require the operator to reconstruct it from prose, use
-`/yalla-show` and `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VISUAL-EXPLAINABILITY.md`.
-Choose the smallest accurate view and state its proof status; the visual is not
-itself acceptance evidence.
+Before approval, classify the Scope Walkthrough gate. When it is required, use
+`/yalla-show` and `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`
+to render the animated scope map. For optional cross-boundary decisions, use
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VISUAL-EXPLAINABILITY.md` to choose the
+smallest accurate view. Visuals are decision support, never proof evidence.
 
 `$REPO` and `$BASE_BRANCH` come from `.claude/YALLA.md` (`repo:` / `base_branch:`), with `$REPO` auto-detected via `gh repo view --json nameWithOwner -q .nameWithOwner` when blank and `$BASE_BRANCH` defaulting to `main`.
 
@@ -42,6 +42,7 @@ Before spawning agents, read:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md`
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/PROJECT-CHECKS.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md`
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/product/ASSUMPTION-TESTING.md`
@@ -144,6 +145,15 @@ Write to `plans/active/issue-###-[slug].md`, plus `plans/active/issue-###.plan.j
 - Human review focus: [the 2-4 files/behaviors worth inspecting closely]
 - Tracker writeback: [GitHub/Linear comment/state update that will be made before implementation]
 
+## Scope Walkthrough
+- Gate: [required|optional|n/a and concrete reason]
+- Promise: [one user-visible outcome being approved]
+- Proposed path: [vertical slices and dependencies]
+- Explicit non-goals: [boundaries that must remain unchanged]
+- Planned proof: [criterion -> highest correct seam]
+- Open questions: [specific unresolved risk, or `none`]
+- Scope verdict: [READY_FOR_SCOPE_APPROVAL|REVISION_REQUIRED]
+
 ## Product Intent
 - Applies: [true/false and why]
 - Intended outcome: [user/business outcome, not implementation output]
@@ -229,6 +239,8 @@ Files likely affected:
 - `.pipeline/product-intent.json`
 - `.pipeline/external-grounding.json` [when applicable]
 - `.pipeline/runtime-e2e-preflight.json` [when applicable]
+- `.pipeline/scope-walkthrough.json` [when gate required]
+- `plans/active/issue-###-scope-walkthrough.html` [when gate required]
 - `.pipeline/acceptance-trace.json`
 - `.pipeline/test-evidence.json`
 - `.pipeline/review-results.json`
@@ -261,23 +273,31 @@ The JSON plan must follow `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` a
 
 Send shutdown_request to all 4 teammates. Wait for confirmations. TeamDelete.
 
-## Step 5: User Approval (MANDATORY)
+## Step 5: Scope Walkthrough And User Approval (MANDATORY)
+
+If `scope_walkthrough_gate` is `required`, create and validate
+`.pipeline/scope-walkthrough.json`, render
+`plans/active/issue-###-scope-walkthrough.html`, and show it before asking for
+approval. If its verdict is `REVISION_REQUIRED`, revise the plan and visual
+before offering approval.
 
 Present plan summary via AskUserQuestion:
+- Scope Walkthrough verdict, promise, changed path, non-goals, and planned proof
 - What I'll build (2-3 sentences)
 - Key technical decisions
 - Red Team flags (unresolved — user decides)
 - Operator understanding checkpoint: state the selected understanding depth and ask one teach-back/tradeoff question when mode is `deep`
 - Questions before starting
-- Options: Approve / Iterate / Show full plan / Cancel
+- Options: Approve scope / Revise scope / Show a slice / Show full plan / Cancel
 
 Loop on Iterate until approved.
 
 After approval:
 
-1. Write or update the GitHub issue body/comment using `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`.
-2. Persist the approved plan path in `.pipeline-state.json`.
-3. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`.
+1. Record `approved` in `.pipeline/scope-walkthrough.json` when the gate applied. Scope approval does not claim the eventual work is proven.
+2. Write or update the GitHub issue body/comment using `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`.
+3. Persist the approved plan path in `.pipeline-state.json`.
+4. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`.
 
 ## Fallback: Sub-Agent Mode
 

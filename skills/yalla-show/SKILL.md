@@ -1,7 +1,7 @@
 ---
 name: yalla-show
-description: "Explain a Yalla plan, diff, workflow, or proof state with a compact visual. Use when the user asks to show, map, diagram, or visualize a Yalla change; never use it as proof."
-argument_hint: "[plan, diff, workflow, decision, or issue-### to explain]"
+description: "Explain a Yalla plan, scope, diff, workflow, or proof state with a compact visual. Use when the user asks to show, map, diagram, visualize, or approve a Yalla change; never use it as proof."
+argument_hint: "[plan, scope, diff, workflow, decision, or issue-### to explain]"
 ---
 
 # /yalla-show
@@ -21,8 +21,8 @@ final `PROVEN` / `NOT_PROVEN` / `INCONCLUSIVE` verdict.
   or proof artifact named by the user.
 
 If the input is unclear, ask one focused question: whether the reader needs to
-understand the intended approach, the exact change, the runtime behavior, or the
-remaining proof gap. Do not inspect or diagram unrelated code.
+understand the intended scope, intended approach, exact change, runtime
+behavior, or remaining proof gap. Do not inspect or diagram unrelated code.
 
 ## Choose one smallest view
 
@@ -36,6 +36,7 @@ answers a different question.
 | Components, modules, or files and their responsibilities | Shallow tree |
 | Exact proposed or completed change | Focused `diff` sketch |
 | Multiple actors, async handoffs, or data movement | Mermaid flow / sequence |
+| Whether to accept a non-trivial plan | Scope Walkthrough |
 | Competing product, UI, or architecture choices | Focused HTML decision aid |
 
 Only include the actors, paths, states, props, or files that affect the question.
@@ -59,11 +60,32 @@ the user explicitly asks for one. The artifact must use real labels and data,
 name the recommendation and tradeoffs, and work at 375px wide. Open it after
 creation when the host supports local files.
 
+## Scope Walkthrough
+
+When the reader is deciding whether to accept a plan's scope, read
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md` and the plan draft
+before creating the visual. Create `.pipeline/scope-walkthrough.json`, validate
+its source contract, then render the required walkthrough at
+`plans/active/issue-###-scope-walkthrough.html`.
+
+The walkthrough is an animated, interactive plan map: it shows the proposed
+path against unchanged dependencies and explicit non-goals, then steps through
+each vertical slice. Every step names the promise, interface, planned proof,
+and any open risk. It must retain a visible `planned, not proven` state until
+implementation evidence exists. Render the whole map and a focused slice view;
+do not turn a complex scope into a decorative generic architecture diagram.
+
+Return the `READY_FOR_SCOPE_APPROVAL` or `REVISION_REQUIRED` verdict with the
+visual. A missing acceptance mapping, proof plan, boundary, or unresolved edge
+is `REVISION_REQUIRED`, not an opportunity to make an attractive incomplete
+diagram.
+
 ## Boundaries
 
-- Use this during `/yalla` planning when a choice is ambiguous, during review
-  when the diff crosses several boundaries, or standalone when the user asks for
-  an explanation.
+- Use this during `/yalla` planning before scope approval when the
+  `scope_walkthrough_gate` is required, when a choice is ambiguous, during
+  review when the diff crosses several boundaries, or standalone when the user
+  asks for an explanation.
 - Keep routine tiny fixes text-only unless a visual removes a real ambiguity.
 - Never turn a diagram into a generic architecture document or add it to a PR
   merely for decoration.

@@ -1,6 +1,7 @@
 # Visual explainability
 
-Use a visual when it makes an active Yalla decision, system boundary, or proof
+Use a visual when it makes an active Yalla decision, system boundary, scope
+approval, or proof
 gap materially easier to understand than a short paragraph. The goal is not to
 make every run visual; it is to give the operator the smallest accurate shape of
 what matters.
@@ -14,6 +15,7 @@ what matters.
 | Who owns which code? | Component or file tree | Paths, ownership, relevant shared modules |
 | What changed? | `diff` sketch | Existing context plus the added/removed behavior |
 | How do actors or services interact? | Mermaid flow or sequence | Actor, message, failure/recovery handoff |
+| What am I about to approve? | Scope Walkthrough | Proposed path, existing dependencies, non-goals, proof plan, and open questions |
 | Which option should we choose? | Focused HTML decision aid | Options, tradeoffs, risk, recommendation |
 
 The visual must use real code, artifact, and interface names. It should show
@@ -36,12 +38,14 @@ explicitly.
 
 ## HTML decision aids
 
-Create an HTML artifact only when an option comparison, visual UI state, or dense
-system boundary cannot be communicated faithfully with a code block or Mermaid.
+Create an HTML artifact when an option comparison, visual UI state, dense system
+boundary, or a required Scope Walkthrough cannot be communicated faithfully with
+a code block or Mermaid.
 Use real labels and data, show the recommendation and its tradeoff, support
 desktop and 375px mobile layouts, and avoid generic dashboard chrome. A planning
-artifact belongs in `plans/active/issue-###-visual.html`; do not create one for
-routine implementation updates.
+artifact belongs in `plans/active/issue-###-visual.html`; a Scope Walkthrough
+belongs in `plans/active/issue-###-scope-walkthrough.html`. Do not create one
+for routine implementation updates.
 
 ## Quality check
 
