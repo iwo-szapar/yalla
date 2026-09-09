@@ -35,6 +35,8 @@ Tiny hotfixes may use minimal evidence mode: no committed `.pipeline/*` artifact
   "external_grounding_gate_reason": "Uses provider retry semantics",
   "runtime_e2e_gate": "applies|n/a",
   "runtime_e2e_gate_reason": "PR claims preview-environment evidence",
+  "scope_walkthrough_gate": "required|optional|n/a",
+  "scope_walkthrough_gate_reason": "Two vertical slices cross a user and provider boundary",
   "evidence_gate_requirements": {
     "surface_parity": { "status": "applies|n/a", "reason": "Adds a public API route" },
     "trust_map": { "status": "applies|n/a", "reason": "Consumes an untrusted display name" },
@@ -88,6 +90,13 @@ Tiny hotfixes may use minimal evidence mode: no committed `.pipeline/*` artifact
   }
 }
 ```
+
+### `.pipeline/scope-walkthrough.json`
+
+Required when `scope_walkthrough_gate` is `required`. Its canonical source
+contract, validation rules, and matching HTML visual are in
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`. Keep it local
+unless it records an accepted risk or non-obvious scope decision reviewers need.
 
 ### `.pipeline/architecture-alignment.json`
 

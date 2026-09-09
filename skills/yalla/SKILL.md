@@ -27,6 +27,14 @@ For every changed workflow, define its success invariant: the workflow is not su
 
 For non-trivial work, also apply the operator-understanding protocol (see `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/`): the run is not operator-ready until the operator/maintainer has a plain-English explanation of the problem, solution, tradeoff, impact, risks, and verification. Use the protocol's `light/default/deep` modes so small changes do not inherit a full teaching ceremony.
 
+Classify the Scope Walkthrough gate before plan approval. When it is required,
+use `/yalla-show` and `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`
+to render an animated scope map before the operator accepts the plan. For other
+cross-boundary planning or review decisions, use
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VISUAL-EXPLAINABILITY.md` to add the
+smallest truthful visual. Visuals are decision support, never deterministic
+proof or a replacement for the Proof Contract.
+
 Bias toward launchable increments. Prefer the smallest user-testable version that can reach real users without violating the success invariant. Do not expand scope to make the system feel complete unless the user-visible promise requires it.
 
 Treat each branch/worktree as a shippable save point. If the work is too broad to review, test, or roll back as one coherent user-visible change, split it into phase PRs instead of carrying one large diff to the end.
@@ -69,6 +77,7 @@ Read these on demand. They are the source of truth for the upgraded pipeline:
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/TEST-SEAMS.md` — behavior tests through public interfaces
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARCHITECTURE-DEPTH.md` — deep-module/locality review vocabulary
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/ARTIFACTS.md` — evidence schemas and artifact commit policy
+- `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md` — pre-approval visual scope contract and approval gate
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/EVIDENCE-GATES.md` — conditional grounding, proof-boundary, and generative evidence gates
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VERIFIERS.md` — verifier selection, goal contracts, evaluator separation, and long-running loop artifacts
 - `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md` — durable issue contract
@@ -193,9 +202,14 @@ Classify the task before planning:
    - `applies` when preview, staging, production, remote, or other real-environment evidence will be needed or claimed. Add `runtime-e2e-proof-check` to `required_gates`.
    - `n/a` only with a concrete reason naming why local/static proof is sufficient.
 14. Determine `evidence_gate_requirements` for `surface_parity`, `trust_map`, `volume_envelope`, `lifecycle_states`, and `ui_proof`. Record every gate as `applies` or `n/a` with a concrete reason. For each applicable gate, add its matching `surface-parity-check`, `trust-map-check`, `volume-envelope-check`, `lifecycle-state-check`, or `ui-proof-check` to `required_gates`.
-15. Write `.pipeline/classification.json` and add the same fields, gate decisions, and reasons to `.pipeline-state.json`.
-16. Write or update `.pipeline/goal-contract.json` with success criteria, constraints, budget, forbidden shortcuts, and required evidence.
-17. Record the phase in `.pipeline/events.jsonl` and checkpoint with phase `classify`.
+15. Determine `scope_walkthrough_gate`:
+   - `required` for medium/high-risk work, phase-split work, an expected multi-slice plan, or a user/data/system boundary crossing.
+   - `optional` only for a single low-risk slice where a visual removes a concrete approval ambiguity.
+   - `n/a` only for tiny-hotfixes or docs-only work with a specific reason.
+   Re-check after writing vertical slices; upgrade to `required` if the completed plan has more than one slice.
+16. Write `.pipeline/classification.json` and add the same fields, gate decisions, and reasons to `.pipeline-state.json`.
+17. Write or update `.pipeline/goal-contract.json` with success criteria, constraints, budget, forbidden shortcuts, and required evidence.
+18. Record the phase in `.pipeline/events.jsonl` and checkpoint with phase `classify`.
 
 ### Conditional routing
 
@@ -292,7 +306,7 @@ git worktree add -b "session/issue-$ISSUE_NUMBER-$SLUG" ".claude/worktrees/issue
 
 If already in a Claude Code worktree flow, use the equivalent worktree-entry mechanism.
 
-State must include `issue_number`, `issue_url`, `branch`, `task_type`, `scope_mode`, `required_gates`, `phase_split_required`, `risk_tier`, `evidence_mode`, `ceremony_mode`, `minimum_diff_decision`, `architecture_doc_gate`, `architecture_doc_gate_reason`, `product_intent_gate`, `product_intent_gate_reason`, `external_grounding_gate`, `external_grounding_gate_reason`, `runtime_e2e_gate`, `runtime_e2e_gate_reason`, `evidence_gate_requirements`, `merge_policy`, and `phase: "1-plan"`. It must not introduce a parallel ID scheme outside `issue-###`.
+State must include `issue_number`, `issue_url`, `branch`, `task_type`, `scope_mode`, `required_gates`, `phase_split_required`, `risk_tier`, `evidence_mode`, `ceremony_mode`, `minimum_diff_decision`, `architecture_doc_gate`, `architecture_doc_gate_reason`, `product_intent_gate`, `product_intent_gate_reason`, `external_grounding_gate`, `external_grounding_gate_reason`, `runtime_e2e_gate`, `runtime_e2e_gate_reason`, `scope_walkthrough_gate`, `scope_walkthrough_gate_reason`, `evidence_gate_requirements`, `merge_policy`, and `phase: "1-plan"`. It must not introduce a parallel ID scheme outside `issue-###`.
 
 ---
 
@@ -357,7 +371,15 @@ For UI changes, add a design pre-pass before implementation planning:
 - Screenshots, references, or prototypes to inspect.
 - Non-goals so the agent does not drift into generic redesign.
 
-For ambiguous UI, product, architecture, or milestone choices, create a visual planning artifact before asking for approval. Use a concise HTML file or similarly scannable artifact instead of a long wall of markdown when the user needs to compare options. Include clear option cards, tradeoffs, risk level, and a recommended choice. The artifact is planning aid, not a requirement for tiny fixes.
+Determine `scope_walkthrough_gate` before asking for approval. When required,
+read `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`, validate
+`.pipeline/scope-walkthrough.json`, and render
+`plans/active/issue-###-scope-walkthrough.html`. Show its planned-versus-proven
+legend, proposed path, existing dependencies, explicit non-goals, and proof
+plan before offering scope approval. For other ambiguous UI, product,
+architecture, or milestone choices, read
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/VISUAL-EXPLAINABILITY.md` and create the
+smallest suitable visual. This is planning aid, not proof of the chosen option.
 
 Use subagents deliberately when exploration would bloat the main context:
 
@@ -450,6 +472,15 @@ Plan structure:
 - Proof plan: [test/browser/API/static/manual evidence for each acceptance criterion]
 - Human review focus: [the 2-4 files/behaviors worth inspecting closely]
 - Tracker writeback: [GitHub/Linear comment/state update that will be made before implementation]
+
+## Scope Walkthrough
+- Gate: [required|optional|n/a and concrete reason]
+- Promise: [one user-visible outcome being approved]
+- Proposed path: [vertical slices and dependencies]
+- Explicit non-goals: [boundaries that must remain unchanged]
+- Planned proof: [criterion -> highest correct seam]
+- Open questions: [specific unresolved risk, or `none`]
+- Scope verdict: [READY_FOR_SCOPE_APPROVAL|REVISION_REQUIRED]
 
 ## Research Summary
 - Research artifact: [`plans/active/issue-###-[slug]-research.md` or `N/A` with reason]
@@ -552,6 +583,8 @@ Acceptance criteria:
 - `.pipeline/product-intent.json`
 - `.pipeline/external-grounding.json` [when applicable]
 - `.pipeline/runtime-e2e-preflight.json` [when applicable]
+- `.pipeline/scope-walkthrough.json` [when gate required]
+- `plans/active/issue-###-scope-walkthrough.html` [when gate required]
 - `.pipeline/acceptance-trace.json`
 - `.pipeline/progress.md`
 - `.pipeline/intent-brief.md`
@@ -567,14 +600,20 @@ Artifact policy:
 - Never commit `.pipeline/ship-manifest.json` solely to record the PR number or final PR check status; that evidence belongs in the PR body or comments because another commit restarts checks and makes it stale.
 - For tiny-hotfix mode, prefer no committed `.pipeline/*` artifacts unless the fix needs an audit trail beyond the issue, PR body, and test output.
 
-After user approval:
+Before user approval, if `scope_walkthrough_gate` is `required`, create and
+validate `.pipeline/scope-walkthrough.json`, render the Scope Walkthrough, and
+show it. A `REVISION_REQUIRED` scope verdict blocks approval until the plan and
+visual are corrected.
 
-1. Update the GitHub issue body/comment with the Agent Brief from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`.
-2. Persist the approved plan path in `.pipeline-state.json`.
-3. Create required evidence-gate artifacts from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/EVIDENCE-GATES.md` before the affected slice begins.
-3. If Product Intent applies and the intent is non-obvious or review-relevant, initialize `.pipeline/product-intent.json` with the Product Intent fields and intended behavior claims.
-4. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`, its proof mode, deterministic-seam decision, and evidence target.
-5. Initialize `.pipeline/progress.md` with planned slices, accepted risks, and the next handoff note when the work is more than a tiny hotfix.
+After scope approval:
+
+1. Record `approved` in `.pipeline/scope-walkthrough.json` when the gate applied. This records the intended scope, not a `PROVEN` outcome.
+2. Update the GitHub issue body/comment with the Agent Brief from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/AGENT-BRIEF.md`.
+3. Persist the approved plan path in `.pipeline-state.json`.
+4. Create required evidence-gate artifacts from `${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/EVIDENCE-GATES.md` before the affected slice begins.
+5. If Product Intent applies and the intent is non-obvious or review-relevant, initialize `.pipeline/product-intent.json` with the Product Intent fields and intended behavior claims.
+6. Initialize `.pipeline/acceptance-trace.json` with every acceptance criterion in `status: "pending"`, its proof mode, deterministic-seam decision, and evidence target.
+7. Initialize `.pipeline/progress.md` with planned slices, accepted risks, and the next handoff note when the work is more than a tiny hotfix.
 
 ---
 

@@ -108,6 +108,7 @@ describe('Claude Code plugin contract', () => {
     expect(skillFiles.length).toBeGreaterThanOrEqual(7)
     const names = skillFiles.map((path) => parseFrontmatter(path).name)
     expect(new Set(names).size).toBe(names.length)
+    expect(names).toContain('yalla-show')
 
     for (const path of skillFiles) {
       const frontmatter = parseFrontmatter(path)
@@ -129,6 +130,19 @@ describe('Claude Code plugin contract', () => {
     expect(yallaSkill).toContain('add its matching `surface-parity-check`, `trust-map-check`, `volume-envelope-check`, `lifecycle-state-check`, or `ui-proof-check` to `required_gates`')
     expect(yallaSkill).toContain('add the same fields, gate decisions, and reasons to `.pipeline-state.json`')
     expect(yallaReviewSkill).toContain('Treat their persisted `required_gates` as a floor')
+  })
+
+  it('requires a truthful Scope Walkthrough before complex plan approval', () => {
+    const yallaSkill = readFileSync(join(repoRoot, 'skills/yalla/SKILL.md'), 'utf8')
+    const planSkill = readFileSync(join(repoRoot, 'skills/yalla-plan/SKILL.md'), 'utf8')
+    const showSkill = readFileSync(join(repoRoot, 'skills/yalla-show/SKILL.md'), 'utf8')
+    const scopeContract = readFileSync(join(repoRoot, 'knowledge/yalla/SCOPE-WALKTHROUGH.md'), 'utf8')
+
+    expect(yallaSkill).toContain('Determine `scope_walkthrough_gate`')
+    expect(planSkill).toContain('Scope Walkthrough And User Approval')
+    expect(showSkill).toContain('READY_FOR_SCOPE_APPROVAL')
+    expect(scopeContract).toContain('planned-versus-proven legend')
+    expect(scopeContract).toContain('Do not offer approval in')
   })
 
   it('validates agent frontmatter and unique names', () => {
@@ -170,6 +184,7 @@ describe('Claude Code plugin contract', () => {
 
     expect(readFileSync(join(target, '.claude/YALLA.md'), 'utf8')).toBe('repo: "kept/config"\n')
     expect(existsSync(join(target, '.claude/skills/yalla/SKILL.md'))).toBe(true)
+    expect(existsSync(join(target, '.claude/skills/yalla-show/SKILL.md'))).toBe(true)
     expect(existsSync(join(target, '.claude/agents/yalla-lead.md'))).toBe(true)
     expect(existsSync(join(target, '.claude/knowledge/yalla/PROJECT-CHECKS.md'))).toBe(true)
     expect(existsSync(join(target, '.claude/knowledge/product/PRODUCT-INTENT-FRAMEWORK.md'))).toBe(true)

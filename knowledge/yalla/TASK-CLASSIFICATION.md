@@ -39,6 +39,8 @@ Write the classification into `.pipeline/classification.json` and `.pipeline-sta
   "external_grounding_gate_reason": "...",
   "runtime_e2e_gate": "applies|n/a",
   "runtime_e2e_gate_reason": "...",
+  "scope_walkthrough_gate": "required|optional|n/a",
+  "scope_walkthrough_gate_reason": "...",
   "evidence_gate_requirements": {
     "surface_parity": { "status": "applies|n/a", "reason": "..." },
     "trust_map": { "status": "applies|n/a", "reason": "..." },
@@ -73,6 +75,23 @@ Set `product_intent_gate: "applies"` when the task changes product/GTM/user-flow
 Set `product_intent_gate: "n/a"` only with a concrete reason, such as `internal refactor preserving public behavior` or `test-only change with no product promise change`.
 
 When the gate applies, the plan must include `Product Intent`, approval must preserve the MVP boundary, and review must run `intended-vs-implemented-check`.
+
+## Scope Walkthrough Gate
+
+Set `scope_walkthrough_gate: "required"` for medium/high-risk work, phase-split
+work, plans with more than one vertical slice, or a user/data/system boundary
+crossing. Set it to `optional` for a single low-risk slice only when a visual
+would remove a concrete approval ambiguity. Set it to `n/a` only for a
+tiny-hotfix or docs-only task with a concrete reason.
+
+Classify from the known scope first, then upgrade the gate to `required` if the
+finished plan introduces more than one vertical slice. Never downgrade a
+required gate after plan research.
+
+When required, create and validate the Scope Walkthrough before asking for plan
+approval. It must show the proposed scope, unchanged dependencies, explicit
+non-goals, planned proof, and open questions. See
+`${CLAUDE_PLUGIN_ROOT}/knowledge/yalla/SCOPE-WALKTHROUGH.md`.
 
 ## Evidence Gate Classification
 
